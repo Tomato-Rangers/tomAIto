@@ -21,9 +21,10 @@ interface CameraRepository {
     )
 
     suspend fun takePhoto(): CapturedPhoto
+    fun focusOn(x: Float, y: Float)
     fun setFlashEnabled(enabled: Boolean)
     fun setTorch(enabled: Boolean)
-    fun focusOn(x: Float, y: Float)
+    fun setShutterSound(enabled: Boolean)
     fun setZoom(ratio: Float)
     fun zoomBy(factor: Float)
 }

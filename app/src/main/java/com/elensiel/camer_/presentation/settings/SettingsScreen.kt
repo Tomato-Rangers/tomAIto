@@ -23,6 +23,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.elensiel.camer_.R
 import com.elensiel.camer_.presentation.components.SettingsDropdownItem
+import com.elensiel.camer_.presentation.components.SettingsSwitchItem
 
 @Composable
 fun SettingsScreen(
@@ -50,6 +51,14 @@ fun SettingsScreen(
                         selected = state.imageFormat,
                         optionLabel = { it.label },
                         onSelected = viewModel::onImageFormat,
+                    )
+                }
+
+                item {
+                    SettingsSwitchItem(
+                        title = "Shutter Sound",
+                        checked = state.shutterSoundEnabled,
+                        onToggle = viewModel::onShutterSoundEnabled,
                     )
                 }
             }

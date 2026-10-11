@@ -75,6 +75,10 @@ class CameraViewModel(
             settingsRepo.settings.map { it.flashEnabled }.distinctUntilChanged()
                 .collect(cameraRepo::setFlashEnabled)
         }
+        viewModelScope.launch {
+            settingsRepo.settings.map { it.shutterSoundEnabled}.distinctUntilChanged()
+                .collect(cameraRepo::setShutterSound)
+        }
     }
 
     suspend fun bindCamera(
@@ -116,8 +120,6 @@ class CameraViewModel(
     fun onAspectRatio(ratio: CaptureAspectRatio) {
         viewModelScope.launch { settingsRepo.setAspectRatio(ratio) }
     }
-
-
 
     fun onToggleFlash() {
         viewModelScope.launch { settingsRepo.setFlashEnabled(!uiState.value.flashEnabled) }

@@ -6,11 +6,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -21,9 +16,6 @@ import com.elensiel.camer_.presentation.components.ActionButton
 import com.elensiel.camer_.presentation.components.PillOption
 import com.elensiel.camer_.presentation.components.ZoomButtons
 import com.elensiel.camer_.presentation.components.glassPill
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import kotlin.time.Duration.Companion.milliseconds
 
 private val EdgePadding = 24.dp
 
@@ -81,9 +73,7 @@ fun CameraControls(
             modifier = Modifier
                 .align(Alignment.TopEnd)
                 .padding(top = EdgePadding, end = EdgePadding),
-            onClick =
-                    onSettingsClick
-            ,
+            onClick = onSettingsClick,
             icon = painterResource(R.drawable.settings),
             contentDescription = "Settings",
         )

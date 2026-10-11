@@ -1,6 +1,7 @@
 package com.elensiel.camer_.data.camera
 
 import android.content.Context
+import android.media.MediaActionSound
 import androidx.camera.core.Camera
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.FocusMeteringAction
@@ -39,14 +40,20 @@ import kotlin.coroutines.resumeWithException
 class CameraXRepository(private val context: Context) : CameraRepository {
     private var camera: Camera? = null
     private var imageCapture: ImageCapture? = null
+
     private var flashEnabled = false
     private var imageFormat: ImageFormat? = null
+    private var shutterSoundEnabled = false
+    private val shutterSound = MediaActionSound().apply {
+        load(MediaActionSound.SHUTTER_CLICK)
+    }
 
     private val _surfaceRequest = MutableStateFlow<SurfaceRequest?>(null)
     override val surfaceRequest: StateFlow<SurfaceRequest?> = _surfaceRequest.asStateFlow()
 
     private val _state = MutableStateFlow(CameraState())
     override val state = _state.asStateFlow()
+
 
     /**
      * Binds the camera to [lifecycleOwner] and starts the preview.
@@ -183,7 +190,7 @@ class CameraXRepository(private val context: Context) : CameraRepository {
         _state.update {
             it.copy(
                 hasFlashUnit = cam.cameraInfo.hasFlashUnit(),
-                supportedFormats = supportedFormats
+                supportedFormats = supportedFormats,
             )
         }
 
@@ -246,6 +253,10 @@ class CameraXRepository(private val context: Context) : CameraRepository {
             ImageCapture.OutputFileOptions.Builder(photoFile).build(),
             ContextCompat.getMainExecutor(context),
             object : ImageCapture.OnImageSavedCallback {
+                override fun onCaptureStarted() {
+                    if (shutterSoundEnabled) shutterSound.play(MediaActionSound.SHUTTER_CLICK)
+                }
+
                 override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
                     cont.resume(CapturedPhoto(photoFile, format))
                 }
@@ -255,17 +266,6 @@ class CameraXRepository(private val context: Context) : CameraRepository {
                 }
             }
         )
-    }
-
-    override fun setFlashEnabled(enabled: Boolean) {
-        flashEnabled = enabled
-        imageCapture?.flashMode = flashMode()
-    }
-
-    override fun setTorch(enabled: Boolean) {
-        if (!_state.value.hasFlashUnit) return
-        _state.update { it.copy(torchEnabled = enabled) }
-        camera?.cameraControl?.enableTorch(enabled)
     }
 
     override fun focusOn(x: Float, y: Float) {
@@ -281,6 +281,21 @@ class CameraXRepository(private val context: Context) : CameraRepository {
                 point, FocusMeteringAction.FLAG_AF or FocusMeteringAction.FLAG_AE
             ).setAutoCancelDuration(3, TimeUnit.SECONDS).build()
         )
+    }
+
+    override fun setFlashEnabled(enabled: Boolean) {
+        flashEnabled = enabled
+        imageCapture?.flashMode = flashMode()
+    }
+
+    override fun setTorch(enabled: Boolean) {
+        if (!_state.value.hasFlashUnit) return
+        _state.update { it.copy(torchEnabled = enabled) }
+        camera?.cameraControl?.enableTorch(enabled)
+    }
+
+    override fun setShutterSound(enabled: Boolean) {
+        shutterSoundEnabled = enabled
     }
 
     override fun setZoom(ratio: Float) {

@@ -30,6 +30,7 @@ class SettingsViewModel(
                 if (settings.imageFormat in available) settings.imageFormat
                 else ImageFormat.JPEG,
             availableImageFormats = available,
+            shutterSoundEnabled = settings.shutterSoundEnabled,
         )
     }.stateIn(
         viewModelScope,
@@ -39,6 +40,10 @@ class SettingsViewModel(
 
     fun onImageFormat(format: ImageFormat) {
         viewModelScope.launch { settingsRepo.setImageFormat(format) }
+    }
+
+    fun onShutterSoundEnabled(enabled: Boolean) {
+        viewModelScope.launch { settingsRepo.setShutterSoundEnabled(enabled) }
     }
 
     companion object {

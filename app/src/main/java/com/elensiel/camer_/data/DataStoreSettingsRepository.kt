@@ -1,6 +1,8 @@
 package com.elensiel.camer_.data
 
 import android.content.Context
+import android.media.MediaActionSound
+import android.os.Build
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
@@ -19,6 +21,7 @@ class DataStoreSettingsRepository(private val context: Context) : SettingsReposi
     private val aspectKey = stringPreferencesKey("aspect_ratio")
     private val flashKey = booleanPreferencesKey("flash_enabled")
     private val imageFormatKey = stringPreferencesKey("image_format")
+    private val shutterSoundKey = booleanPreferencesKey("shutter_sound_enabled")
 
     override val settings: Flow<Settings> = context.dataStore.data.map { p ->
         Settings(
@@ -31,6 +34,10 @@ class DataStoreSettingsRepository(private val context: Context) : SettingsReposi
             imageFormat = p[imageFormatKey]
                 ?.let { runCatching { ImageFormat.valueOf(it) }.getOrNull() }
                 ?: ImageFormat.JPEG,
+
+            shutterSoundEnabled = p[shutterSoundKey]
+                ?: if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) MediaActionSound.mustPlayShutterSound()
+                else false,
         )
     }
 
@@ -44,5 +51,9 @@ class DataStoreSettingsRepository(private val context: Context) : SettingsReposi
 
     override suspend fun setImageFormat(format: ImageFormat) {
         context.dataStore.edit { it[imageFormatKey] = format.name }
+    }
+
+    override suspend fun setShutterSoundEnabled(enabled: Boolean) {
+        context.dataStore.edit { it[shutterSoundKey] = enabled }
     }
 }

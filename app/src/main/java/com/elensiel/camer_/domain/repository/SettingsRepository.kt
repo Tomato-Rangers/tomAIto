@@ -11,4 +11,5 @@ interface SettingsRepository {
     suspend fun setAspectRatio(ratio: CaptureAspectRatio)
     suspend fun setFlashEnabled(enabled: Boolean)
     suspend fun setImageFormat(format: ImageFormat)
+    suspend fun setShutterSoundEnabled(enabled: Boolean)
 }
