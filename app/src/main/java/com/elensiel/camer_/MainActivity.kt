@@ -89,6 +89,7 @@ fun App(
                 photoFile = file,
                 onSave = viewModel::onSave,
                 onDiscard = viewModel::onDiscard,
+                onBack = viewModel::onDiscard,
             )
         }
 
