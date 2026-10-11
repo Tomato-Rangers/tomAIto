@@ -17,6 +17,7 @@ private val Context.dataStore by preferencesDataStore(name = "settings")
 
 
 class DataStoreSettingsRepository(private val context: Context) : SettingsRepository {
+    private val alwaysSaveEnabled = booleanPreferencesKey("always_save_enabled")
     private val aspectKey = stringPreferencesKey("aspect_ratio")
     private val flashKey = booleanPreferencesKey("flash_enabled")
     private val imageFormatKey = stringPreferencesKey("image_format")
@@ -24,6 +25,8 @@ class DataStoreSettingsRepository(private val context: Context) : SettingsReposi
 
     override val settings: Flow<Settings> = context.dataStore.data.map { p ->
         Settings(
+            alwaysSaveEnabled = p[alwaysSaveEnabled] ?: false,
+
             aspectRatio = p[aspectKey]
                 ?.let { runCatching { CaptureAspectRatio.valueOf(it) }.getOrNull() }
                 ?: CaptureAspectRatio.RATIO_4_3,
@@ -36,6 +39,10 @@ class DataStoreSettingsRepository(private val context: Context) : SettingsReposi
 
             shutterSoundEnabled = ShutterSoundPolicy.isForced || (p[shutterSoundKey] ?: false),
         )
+    }
+
+    override suspend fun setAlwaysSaveEnabled(enabled: Boolean) {
+        context.dataStore.edit { it[alwaysSaveEnabled] = enabled }
     }
 
     override suspend fun setAspectRatio(ratio: CaptureAspectRatio) {

@@ -35,6 +35,14 @@ class CameraViewModel(
     private val lensFacing = MutableStateFlow(LensFacing.BACK)
     private val capturedPhoto = MutableStateFlow<CapturedPhoto?>(null)
 
+    // Read synchronously in onCapture(), so it is kept hot (Eagerly).
+    private val alwaysSave: StateFlow<Boolean> = settingsRepo.settings
+        .map { it.alwaysSaveEnabled }
+        .distinctUntilChanged()
+        .stateIn(viewModelScope, SharingStarted.Eagerly, false)
+
+    val surfaceRequest: StateFlow<SurfaceRequest?> = cameraRepo.surfaceRequest
+
     val bindConfig: StateFlow<BindConfig?> = combine(
         settingsRepo.settings,
         lensFacing,
@@ -46,8 +54,6 @@ class CameraViewModel(
         )
     }.distinctUntilChanged()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
-
-    val surfaceRequest: StateFlow<SurfaceRequest?> = cameraRepo.surfaceRequest
 
     val uiState: StateFlow<CameraUiState> = combine(
         settingsRepo.settings,
@@ -70,13 +76,14 @@ class CameraViewModel(
         CameraUiState()
     )
 
+    // push settings changes into the camera
     init {
         viewModelScope.launch {
             settingsRepo.settings.map { it.flashEnabled }.distinctUntilChanged()
                 .collect(cameraRepo::setFlashEnabled)
         }
         viewModelScope.launch {
-            settingsRepo.settings.map { it.shutterSoundEnabled}.distinctUntilChanged()
+            settingsRepo.settings.map { it.shutterSoundEnabled }.distinctUntilChanged()
                 .collect(cameraRepo::setShutterSound)
         }
     }
@@ -88,12 +95,27 @@ class CameraViewModel(
         owner, config.lensFacing, config.aspectRatio, config.imageFormat
     )
 
+    // ---------------------------------------------------------------
+    // Capture and review
+    // ---------------------------------------------------------------
+
     fun onCapture() {
         if (capturedPhoto.value != null) return
+        val saveNow = alwaysSave.value
+
         viewModelScope.launch {
-            runCatching { cameraRepo.takePhoto() }
-                .onSuccess { if (capturedPhoto.value == null) capturedPhoto.value = it }
+
+            val photo = runCatching { cameraRepo.takePhoto() }
                 .onFailure { Log.e("Camera", "Capture failed.", it) }
+                .getOrNull() ?: return@launch
+
+            when {
+                saveNow -> runCatching { mediaRepo.save(photo.file, photo.format) }
+                    .onFailure { Log.e("Camera", "Auto-save failed.", it) }
+
+                capturedPhoto.value == null -> capturedPhoto.value = photo
+                else -> mediaRepo.discard(photo.file)
+            }
         }
     }
 
@@ -112,10 +134,23 @@ class CameraViewModel(
         viewModelScope.launch { mediaRepo.discard(photo.file) }
     }
 
+    // ---------------------------------------------------------------
+    // Live camera controls
+    // ---------------------------------------------------------------
+
     fun onFlip() {
         cameraRepo.setTorch(false)
         lensFacing.update { it.flip() }
     }
+
+    fun onToggleTorch() = cameraRepo.setTorch(!uiState.value.torchEnabled)
+    fun onFocus(point: Offset) = cameraRepo.focusOn(point.x, point.y)
+    fun onZoomBy(factor: Float) = cameraRepo.zoomBy(factor)
+    fun onZoomTo(ratio: Float) = cameraRepo.setZoom(ratio)
+
+    // ---------------------------------------------------------------
+    // Persisted settings
+    // ---------------------------------------------------------------
 
     fun onAspectRatio(ratio: CaptureAspectRatio) {
         viewModelScope.launch { settingsRepo.setAspectRatio(ratio) }
@@ -124,11 +159,6 @@ class CameraViewModel(
     fun onToggleFlash() {
         viewModelScope.launch { settingsRepo.setFlashEnabled(!uiState.value.flashEnabled) }
     }
-
-    fun onToggleTorch() = cameraRepo.setTorch(!uiState.value.torchEnabled)
-    fun onFocus(point: Offset) = cameraRepo.focusOn(point.x, point.y)
-    fun onZoomBy(factor: Float) = cameraRepo.zoomBy(factor)
-    fun onZoomTo(ratio: Float) = cameraRepo.setZoom(ratio)
 
     companion object {
         val Factory = viewModelFactory {

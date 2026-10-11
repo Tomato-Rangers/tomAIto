@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.Flow
 interface SettingsRepository {
     val settings: Flow<Settings>
 
+    suspend fun setAlwaysSaveEnabled(enabled: Boolean)
     suspend fun setAspectRatio(ratio: CaptureAspectRatio)
     suspend fun setFlashEnabled(enabled: Boolean)
     suspend fun setImageFormat(format: ImageFormat)

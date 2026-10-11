@@ -27,6 +27,7 @@ class SettingsViewModel(
         val available = ImageFormat.entries.filter { it in cam.supportedFormats }
 
         SettingsUiState(
+            alwaysSaveEnabled = settings.alwaysSaveEnabled,
             imageFormat =
                 if (settings.imageFormat in available) settings.imageFormat
                 else ImageFormat.JPEG,
@@ -40,6 +41,9 @@ class SettingsViewModel(
         SettingsUiState()
     )
 
+    fun onAlwaysSaveEnabled(enabled: Boolean) {
+        viewModelScope.launch { settingsRepo.setAlwaysSaveEnabled(enabled) }
+    }
     fun onImageFormat(format: ImageFormat) {
         viewModelScope.launch { settingsRepo.setImageFormat(format) }
     }

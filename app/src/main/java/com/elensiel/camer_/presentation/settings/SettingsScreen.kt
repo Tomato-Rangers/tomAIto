@@ -62,6 +62,14 @@ fun SettingsScreen(
                         enabled = !state.shutterSoundLocked,
                     )
                 }
+
+                item {
+                    SettingsSwitchItem(
+                        title = "Always Save",
+                        checked = state.alwaysSaveEnabled,
+                        onToggle = viewModel::onAlwaysSaveEnabled,
+                    )
+                }
             }
         }
     }
