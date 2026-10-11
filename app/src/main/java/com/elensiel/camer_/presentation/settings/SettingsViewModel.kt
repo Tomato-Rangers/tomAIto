@@ -7,6 +7,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.elensiel.camer_.CamApp
 import com.elensiel.camer_.domain.model.ImageFormat
+import com.elensiel.camer_.domain.model.ShutterSoundPolicy
 import com.elensiel.camer_.domain.repository.CameraRepository
 import com.elensiel.camer_.domain.repository.SettingsRepository
 import kotlinx.coroutines.flow.SharingStarted
@@ -31,6 +32,7 @@ class SettingsViewModel(
                 else ImageFormat.JPEG,
             availableImageFormats = available,
             shutterSoundEnabled = settings.shutterSoundEnabled,
+            shutterSoundLocked = ShutterSoundPolicy.isForced,
         )
     }.stateIn(
         viewModelScope,

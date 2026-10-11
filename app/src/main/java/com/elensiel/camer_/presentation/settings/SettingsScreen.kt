@@ -59,6 +59,7 @@ fun SettingsScreen(
                         title = "Shutter Sound",
                         checked = state.shutterSoundEnabled,
                         onToggle = viewModel::onShutterSoundEnabled,
+                        enabled = !state.shutterSoundLocked,
                     )
                 }
             }

@@ -19,6 +19,7 @@ fun SettingsSwitchItem(
     checked: Boolean,
     onToggle: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
+    enabled: Boolean = true,
 ) {
     Row(
         modifier = modifier
@@ -27,6 +28,7 @@ fun SettingsSwitchItem(
                 value = checked,
                 role = Role.Switch,
                 onValueChange = onToggle,
+                enabled = enabled,
             ),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -40,6 +42,7 @@ fun SettingsSwitchItem(
             Switch(
                 checked = checked,
                 onCheckedChange = null,
+                enabled = enabled,
             )
         }
     }

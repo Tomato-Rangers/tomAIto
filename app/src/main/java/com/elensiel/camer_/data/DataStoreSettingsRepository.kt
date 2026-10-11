@@ -1,8 +1,6 @@
 package com.elensiel.camer_.data
 
 import android.content.Context
-import android.media.MediaActionSound
-import android.os.Build
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
@@ -10,6 +8,7 @@ import androidx.datastore.preferences.preferencesDataStore
 import com.elensiel.camer_.domain.model.CaptureAspectRatio
 import com.elensiel.camer_.domain.model.ImageFormat
 import com.elensiel.camer_.domain.model.Settings
+import com.elensiel.camer_.domain.model.ShutterSoundPolicy
 import com.elensiel.camer_.domain.repository.SettingsRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -35,9 +34,7 @@ class DataStoreSettingsRepository(private val context: Context) : SettingsReposi
                 ?.let { runCatching { ImageFormat.valueOf(it) }.getOrNull() }
                 ?: ImageFormat.JPEG,
 
-            shutterSoundEnabled = p[shutterSoundKey]
-                ?: if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) MediaActionSound.mustPlayShutterSound()
-                else false,
+            shutterSoundEnabled = ShutterSoundPolicy.isForced || (p[shutterSoundKey] ?: false),
         )
     }
 
@@ -54,6 +51,7 @@ class DataStoreSettingsRepository(private val context: Context) : SettingsReposi
     }
 
     override suspend fun setShutterSoundEnabled(enabled: Boolean) {
+        if (ShutterSoundPolicy.isForced) return
         context.dataStore.edit { it[shutterSoundKey] = enabled }
     }
 }

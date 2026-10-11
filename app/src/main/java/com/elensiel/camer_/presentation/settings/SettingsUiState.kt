@@ -6,4 +6,5 @@ data class SettingsUiState(
     val imageFormat: ImageFormat = ImageFormat.JPEG,
     val availableImageFormats: List<ImageFormat> = listOf(ImageFormat.JPEG),
     val shutterSoundEnabled: Boolean = false,
+    val shutterSoundLocked: Boolean = false,
 )
