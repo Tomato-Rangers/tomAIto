@@ -4,6 +4,7 @@ import android.content.ContentValues
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.ImageDecoder
 import android.graphics.Matrix
 import android.net.Uri
 import android.os.Build
@@ -21,6 +22,7 @@ class MediaStoreRepository(
     private val context: Context,
     private val saveDirectory: String,
 ) : MediaRepository {
+
     override suspend fun save(
         photoFile: File,
         format: ImageFormat,
@@ -58,6 +60,33 @@ class MediaStoreRepository(
         withContext(Dispatchers.IO) { photoFile.delete() }
 
     private fun transcode(src: File, format: ImageFormat, output: OutputStream) {
+        val bitmap = if (Build.VERSION.SDK_INT >= 28) {
+            ImageDecoder.decodeBitmap(ImageDecoder.createSource(src)) { decoder, _, _ ->
+                decoder.allocator = ImageDecoder.ALLOCATOR_SOFTWARE
+            }
+        } else {
+            decodeLegacy(src)
+        }
+
+        val compressFormat = when (format) {
+            ImageFormat.PNG -> Bitmap.CompressFormat.PNG
+            else ->
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                    Bitmap.CompressFormat.WEBP_LOSSY
+                } else {
+                    Bitmap.CompressFormat.WEBP
+                }
+        }
+
+        try {
+            check(bitmap.compress(compressFormat, 100, output)) { "Bitmap compression failed" }
+        } finally {
+            bitmap.recycle()
+        }
+    }
+
+    // API 26-27: BitmapFactory + manual EXIF orientation
+    private fun decodeLegacy(src: File): Bitmap {
         val decoded = BitmapFactory.decodeFile(src.absolutePath)
             ?: throw IOException("Failed to decode ${src.name}")
 
@@ -80,20 +109,12 @@ class MediaStoreRepository(
                 matrix.postScale(1f, -1f)
             }
         }
-        val bitmap = Bitmap.createBitmap(decoded, 0, 0, decoded.width, decoded.height, matrix, true)
 
-        val compressFormat = when (format) {
-            ImageFormat.PNG -> Bitmap.CompressFormat.PNG
-            else ->
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                    Bitmap.CompressFormat.WEBP_LOSSY
-                } else {
-                    Bitmap.CompressFormat.WEBP
-                }
-        }
+        if (matrix.isIdentity) return decoded
 
-        check(bitmap.compress(compressFormat, 100, output)) { "Bitmap compression failed" }
-        if (bitmap !== decoded) decoded.recycle()
-        bitmap.recycle()
+        val rotated =
+            Bitmap.createBitmap(decoded, 0, 0, decoded.width, decoded.height, matrix, true)
+        decoded.recycle()
+        return rotated
     }
 }
