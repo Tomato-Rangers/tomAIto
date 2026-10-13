@@ -139,7 +139,8 @@ class CameraViewModel(
     // ---------------------------------------------------------------
 
     fun onFlip() {
-        cameraRepo.setTorch(false)
+        // TODO : survey this
+//        cameraRepo.setTorch(false)
         lensFacing.update { it.flip() }
     }
 
