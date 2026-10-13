@@ -4,7 +4,6 @@ data class CameraState(
     val hasFlashUnit: Boolean = true,
     val torchEnabled: Boolean = false,
     val supportedFormats: Set<ImageFormat> = setOf(ImageFormat.JPEG),
-    val shutterSoundEnabled: Boolean = false,
 
     val zoomRatio: Float = 1f,
     val minZoomRatio: Float = 1f,
