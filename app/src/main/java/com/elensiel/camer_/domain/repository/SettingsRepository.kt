@@ -13,6 +13,7 @@ interface SettingsRepository {
     suspend fun setAspectRatio(ratio: CaptureAspectRatio)
     suspend fun setFlashEnabled(enabled: Boolean)
     suspend fun setImageFormat(format: ImageFormat)
+    suspend fun setSaveLocation(location: String)
     suspend fun setShutterSoundEnabled(enabled: Boolean)
     suspend fun setVolumeKeyShutter(mode: VolumeKeyShutter)
 }

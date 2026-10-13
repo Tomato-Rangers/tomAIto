@@ -40,8 +40,8 @@ fun VolumeKeyShutterHandler(
 }
 
 private fun VolumeKeyShutter.matches(keyCode: Int) = when (this) {
-    VolumeKeyShutter.OFF -> false
     VolumeKeyShutter.VOLUME_UP -> keyCode == KeyEvent.KEYCODE_VOLUME_UP
     VolumeKeyShutter.VOLUME_DOWN -> keyCode == KeyEvent.KEYCODE_VOLUME_DOWN
     VolumeKeyShutter.BOTH -> keyCode == KeyEvent.KEYCODE_VOLUME_UP || keyCode == KeyEvent.KEYCODE_VOLUME_DOWN
+    else -> false
 }

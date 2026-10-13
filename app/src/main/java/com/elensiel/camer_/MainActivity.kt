@@ -59,7 +59,12 @@ class MainActivity : ComponentActivity() {
                 Manifest.permission.CAMERA,
                 "Camera",
                 "Needed to take photos with the app.",
-            )
+            ),
+//            PermissionData(
+//                Manifest.permission.READ_EXTERNAL_STORAGE,
+//                "Read external storage",
+//                "Needed to know where to save captured photos.",
+//            )
         )
     }
 }
@@ -107,7 +112,7 @@ fun App(
             if (state.volumeKeyShutter != VolumeKeyShutter.OFF) {
                 VolumeKeyShutterHandler(
                     mode = state.volumeKeyShutter,
-                    viewModel::onCapture,
+                    onShutter = viewModel::onCapture,
                 )
             }
 

@@ -33,6 +33,7 @@ class SettingsViewModel(
                 if (settings.imageFormat in available) settings.imageFormat
                 else ImageFormat.JPEG,
             availableImageFormats = available,
+            saveLocation = settings.saveLocation,
             shutterSoundEnabled = settings.shutterSoundEnabled,
             shutterSoundLocked = ShutterSoundPolicy.isForced,
             volumeKeyShutter = settings.volumeKeyShutter,
@@ -49,6 +50,10 @@ class SettingsViewModel(
 
     fun onImageFormat(format: ImageFormat) {
         viewModelScope.launch { settingsRepo.setImageFormat(format) }
+    }
+
+    fun onSaveLocation(location: String) {
+        viewModelScope.launch { settingsRepo.setSaveLocation(location) }
     }
 
     fun onShutterSoundEnabled(enabled: Boolean) {

@@ -20,12 +20,12 @@ import java.io.OutputStream
 
 class MediaStoreRepository(
     private val context: Context,
-    private val saveDirectory: String,
 ) : MediaRepository {
 
     override suspend fun save(
         photoFile: File,
         format: ImageFormat,
+        saveDirectory: String
     ): Uri = withContext(Dispatchers.IO) {
         val values = ContentValues().apply {
             put(

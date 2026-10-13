@@ -6,6 +6,11 @@
         android:name="android.hardware.camera.any"
         android:required="true" />
 
+    <uses-permission
+        android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32"
+        android:requiredFeature="true" />
+
     <uses-permission android:name="android.permission.CAMERA" />
 
     <application

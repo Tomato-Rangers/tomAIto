@@ -41,6 +41,11 @@ class CameraViewModel(
         .distinctUntilChanged()
         .stateIn(viewModelScope, SharingStarted.Eagerly, false)
 
+    private val saveDirectory: StateFlow<String> = settingsRepo.settings
+        .map { it.saveLocation }
+        .distinctUntilChanged()
+        .stateIn(viewModelScope, SharingStarted.Eagerly, "DCIM/camer-")
+
     val surfaceRequest: StateFlow<SurfaceRequest?> = cameraRepo.surfaceRequest
 
     val bindConfig: StateFlow<BindConfig?> = combine(
@@ -111,8 +116,13 @@ class CameraViewModel(
                 .getOrNull() ?: return@launch
 
             when {
-                saveNow -> runCatching { mediaRepo.save(photo.file, photo.format) }
-                    .onFailure { Log.e("Camera", "Auto-save failed.", it) }
+                saveNow -> runCatching {
+                    mediaRepo.save(
+                        photo.file,
+                        photo.format,
+                        saveDirectory.value
+                    )
+                }.onFailure { Log.e("Camera", "Auto-save failed.", it) }
 
                 capturedPhoto.value == null -> capturedPhoto.value = photo
                 else -> mediaRepo.discard(photo.file)
@@ -123,7 +133,13 @@ class CameraViewModel(
     fun onSave() {
         val photo = capturedPhoto.value ?: return
         viewModelScope.launch {
-            runCatching { mediaRepo.save(photo.file, photo.format) }
+            runCatching {
+                mediaRepo.save(
+                    photo.file,
+                    photo.format,
+                    saveDirectory.value
+                )
+            }
                 .onSuccess { capturedPhoto.value = null }
                 .onFailure { Log.e("Camera", "Save failed.", it) }
         }

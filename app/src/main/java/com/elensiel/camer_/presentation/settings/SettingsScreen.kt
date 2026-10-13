@@ -1,6 +1,10 @@
 package com.elensiel.camer_.presentation.settings
 
+import android.net.Uri
+import android.provider.DocumentsContract
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -23,6 +27,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.elensiel.camer_.R
 import com.elensiel.camer_.domain.model.VolumeKeyShutter
+import com.elensiel.camer_.presentation.components.SettingsDocumentTreeItem
 import com.elensiel.camer_.presentation.components.SettingsDropdownItem
 import com.elensiel.camer_.presentation.components.SettingsSwitchItem
 
@@ -33,6 +38,17 @@ fun SettingsScreen(
     viewModel: SettingsViewModel = viewModel(factory = SettingsViewModel.Factory),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+
+    val folderPickerLauncher =
+        rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.OpenDocumentTree()
+        ) { treeUri: Uri? ->
+            val uri = treeUri
+                ?.let { DocumentsContract.getTreeDocumentId(treeUri).substringAfter(":") }
+                ?: return@rememberLauncherForActivityResult
+
+            viewModel.onSaveLocation(uri)
+        }
 
     BackHandler(onBack = onBack)
 
@@ -79,6 +95,14 @@ fun SettingsScreen(
                         selected = state.volumeKeyShutter,
                         optionLabel = { it.label },
                         onSelected = viewModel::onVolumeKeyShutter,
+                    )
+                }
+
+                item {
+                    SettingsDocumentTreeItem(
+                        title = "Save Location",
+                        location = state.saveLocation,
+                        onClick = { folderPickerLauncher.launch(null) },
                     )
                 }
             }
