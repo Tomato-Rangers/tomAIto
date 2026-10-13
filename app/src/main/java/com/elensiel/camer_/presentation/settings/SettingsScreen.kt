@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.elensiel.camer_.R
+import com.elensiel.camer_.domain.model.VolumeKeyShutter
 import com.elensiel.camer_.presentation.components.SettingsDropdownItem
 import com.elensiel.camer_.presentation.components.SettingsSwitchItem
 
@@ -68,6 +69,16 @@ fun SettingsScreen(
                         title = "Always Save",
                         checked = state.alwaysSaveEnabled,
                         onToggle = viewModel::onAlwaysSaveEnabled,
+                    )
+                }
+
+                item {
+                    SettingsDropdownItem(
+                        title = "Volume Key as Shutter",
+                        options = VolumeKeyShutter.entries,
+                        selected = state.volumeKeyShutter,
+                        optionLabel = { it.label },
+                        onSelected = viewModel::onVolumeKeyShutter,
                     )
                 }
             }

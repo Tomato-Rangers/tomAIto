@@ -69,6 +69,7 @@ class CameraViewModel(
             minZoomRatio = cam.minZoomRatio,
             maxZoomRatio = cam.maxZoomRatio,
             capturedPhotoFile = photo?.file,
+            volumeKeyShutter = settings.volumeKeyShutter,
         )
     }.stateIn(
         viewModelScope,

@@ -26,10 +26,12 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.elensiel.camer_.domain.model.CaptureAspectRatio
+import com.elensiel.camer_.domain.model.VolumeKeyShutter
 import com.elensiel.camer_.presentation.camera.CameraControls
 import com.elensiel.camer_.presentation.camera.CameraScreen
 import com.elensiel.camer_.presentation.camera.CameraUiState
 import com.elensiel.camer_.presentation.camera.CameraViewModel
+import com.elensiel.camer_.presentation.components.VolumeKeyShutterHandler
 import com.elensiel.camer_.presentation.review.PhotoReviewScreen
 import com.elensiel.camer_.presentation.settings.SettingsScreen
 import com.elensiel.camer_.presentation.theme.CamerTheme
@@ -101,6 +103,14 @@ fun App(
         )
 
         else -> {
+
+            if (state.volumeKeyShutter != VolumeKeyShutter.OFF) {
+                VolumeKeyShutterHandler(
+                    mode = state.volumeKeyShutter,
+                    viewModel::onCapture,
+                )
+            }
+
             surfaceRequest?.let {
                 CameraScreen(
                     innerPadding = innerPadding,

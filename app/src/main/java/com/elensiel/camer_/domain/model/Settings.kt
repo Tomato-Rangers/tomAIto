@@ -6,4 +6,5 @@ data class Settings(
     val flashEnabled: Boolean = false,
     val imageFormat: ImageFormat = ImageFormat.JPEG,
     val shutterSoundEnabled: Boolean = false,
+    val volumeKeyShutter: VolumeKeyShutter = VolumeKeyShutter.OFF,
 )

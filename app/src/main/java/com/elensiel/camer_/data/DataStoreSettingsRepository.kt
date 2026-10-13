@@ -9,6 +9,7 @@ import com.elensiel.camer_.domain.model.CaptureAspectRatio
 import com.elensiel.camer_.domain.model.ImageFormat
 import com.elensiel.camer_.domain.model.Settings
 import com.elensiel.camer_.domain.model.ShutterSoundPolicy
+import com.elensiel.camer_.domain.model.VolumeKeyShutter
 import com.elensiel.camer_.domain.repository.SettingsRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -22,6 +23,7 @@ class DataStoreSettingsRepository(private val context: Context) : SettingsReposi
     private val flashKey = booleanPreferencesKey("flash_enabled")
     private val imageFormatKey = stringPreferencesKey("image_format")
     private val shutterSoundKey = booleanPreferencesKey("shutter_sound_enabled")
+    private val volumeKeyShutterKey = stringPreferencesKey("volume_key_shutter_mode")
 
     override val settings: Flow<Settings> = context.dataStore.data.map { p ->
         Settings(
@@ -38,6 +40,10 @@ class DataStoreSettingsRepository(private val context: Context) : SettingsReposi
                 ?: ImageFormat.JPEG,
 
             shutterSoundEnabled = ShutterSoundPolicy.isForced || (p[shutterSoundKey] ?: false),
+
+            volumeKeyShutter = p[volumeKeyShutterKey]
+                ?.let { runCatching { VolumeKeyShutter.valueOf(it) }.getOrNull() }
+                ?: VolumeKeyShutter.OFF,
         )
     }
 
@@ -60,5 +66,9 @@ class DataStoreSettingsRepository(private val context: Context) : SettingsReposi
     override suspend fun setShutterSoundEnabled(enabled: Boolean) {
         if (ShutterSoundPolicy.isForced) return
         context.dataStore.edit { it[shutterSoundKey] = enabled }
+    }
+
+    override suspend fun setVolumeKeyShutter(mode: VolumeKeyShutter) {
+        context.dataStore.edit { it[volumeKeyShutterKey] = mode.name }
     }
 }

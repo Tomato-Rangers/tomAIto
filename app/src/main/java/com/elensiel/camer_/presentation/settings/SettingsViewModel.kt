@@ -8,6 +8,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.elensiel.camer_.CamApp
 import com.elensiel.camer_.domain.model.ImageFormat
 import com.elensiel.camer_.domain.model.ShutterSoundPolicy
+import com.elensiel.camer_.domain.model.VolumeKeyShutter
 import com.elensiel.camer_.domain.repository.CameraRepository
 import com.elensiel.camer_.domain.repository.SettingsRepository
 import kotlinx.coroutines.flow.SharingStarted
@@ -34,6 +35,7 @@ class SettingsViewModel(
             availableImageFormats = available,
             shutterSoundEnabled = settings.shutterSoundEnabled,
             shutterSoundLocked = ShutterSoundPolicy.isForced,
+            volumeKeyShutter = settings.volumeKeyShutter,
         )
     }.stateIn(
         viewModelScope,
@@ -44,12 +46,17 @@ class SettingsViewModel(
     fun onAlwaysSaveEnabled(enabled: Boolean) {
         viewModelScope.launch { settingsRepo.setAlwaysSaveEnabled(enabled) }
     }
+
     fun onImageFormat(format: ImageFormat) {
         viewModelScope.launch { settingsRepo.setImageFormat(format) }
     }
 
     fun onShutterSoundEnabled(enabled: Boolean) {
         viewModelScope.launch { settingsRepo.setShutterSoundEnabled(enabled) }
+    }
+
+    fun onVolumeKeyShutter(mode: VolumeKeyShutter) {
+        viewModelScope.launch { settingsRepo.setVolumeKeyShutter(mode) }
     }
 
     companion object {

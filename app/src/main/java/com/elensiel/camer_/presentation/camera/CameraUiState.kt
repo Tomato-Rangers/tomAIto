@@ -1,6 +1,7 @@
 package com.elensiel.camer_.presentation.camera
 
 import com.elensiel.camer_.domain.model.CaptureAspectRatio
+import com.elensiel.camer_.domain.model.VolumeKeyShutter
 import java.io.File
 
 data class CameraUiState(
@@ -12,4 +13,5 @@ data class CameraUiState(
     val minZoomRatio: Float = 1f,
     val maxZoomRatio: Float = 1f,
     val capturedPhotoFile: File? = null,
+    val volumeKeyShutter: VolumeKeyShutter = VolumeKeyShutter.OFF,
 )
