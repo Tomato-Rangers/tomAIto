@@ -12,11 +12,15 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.elensiel.camer_.CamApp
 import com.elensiel.camer_.domain.model.BindConfig
 import com.elensiel.camer_.domain.model.CaptureAspectRatio
+import com.elensiel.camer_.domain.model.CaptureResult
 import com.elensiel.camer_.domain.model.CapturedPhoto
-import com.elensiel.camer_.domain.model.LensFacing
 import com.elensiel.camer_.domain.repository.CameraRepository
-import com.elensiel.camer_.domain.repository.MediaRepository
+import com.elensiel.camer_.domain.repository.LensRepository
 import com.elensiel.camer_.domain.repository.SettingsRepository
+import com.elensiel.camer_.domain.usecase.CapturePhotoUseCase
+import com.elensiel.camer_.domain.usecase.DiscardPhotoUseCase
+import com.elensiel.camer_.domain.usecase.ObserveBindConfigUseCase
+import com.elensiel.camer_.domain.usecase.SavePhotoUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -25,42 +29,22 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class CameraViewModel(
     private val cameraRepo: CameraRepository,
     private val settingsRepo: SettingsRepository,
-    private val mediaRepo: MediaRepository,
+    private val lensRepo: LensRepository,
+    private val capturePhoto: CapturePhotoUseCase,
+    private val savePhoto: SavePhotoUseCase,
+    private val discardPhoto: DiscardPhotoUseCase,
+    observeBindConfig: ObserveBindConfigUseCase,
 ) : ViewModel() {
-    private val lensFacing = MutableStateFlow(LensFacing.BACK)
     private val capturedPhoto = MutableStateFlow<CapturedPhoto?>(null)
 
-    // Read synchronously in onCapture(), so it is kept hot (Eagerly).
-    private val alwaysSave: StateFlow<Boolean> = settingsRepo.settings
-        .map { it.alwaysSaveEnabled }
-        .distinctUntilChanged()
-        .stateIn(viewModelScope, SharingStarted.Eagerly, false)
-
-    private val saveDirectory: StateFlow<String> = settingsRepo.settings
-        .map { it.saveLocation }
-        .distinctUntilChanged()
-        .stateIn(viewModelScope, SharingStarted.Eagerly, "DCIM/camer-")
-
     val surfaceRequest: StateFlow<SurfaceRequest?> = cameraRepo.surfaceRequest
-
     val captureStarted: SharedFlow<Unit> = cameraRepo.captureStarted
-
-    val bindConfig: StateFlow<BindConfig?> = combine(
-        settingsRepo.settings,
-        lensFacing,
-    ) { settings, lens ->
-        BindConfig(
-            lensFacing = lens,
-            aspectRatio = settings.aspectRatio,
-            imageFormat = settings.imageFormat,
-        )
-    }.distinctUntilChanged()
+    val bindConfig: StateFlow<BindConfig?> = observeBindConfig()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     val uiState: StateFlow<CameraUiState> = combine(
@@ -88,7 +72,7 @@ class CameraViewModel(
     // push settings changes into the camera
     init {
         viewModelScope.launch {
-            settingsRepo.settings.map { it.flashMode}.distinctUntilChanged()
+            settingsRepo.settings.map { it.flashMode }.distinctUntilChanged()
                 .collect(cameraRepo::setFlashMode)
         }
         viewModelScope.launch {
@@ -110,25 +94,15 @@ class CameraViewModel(
 
     fun onCapture() {
         if (capturedPhoto.value != null) return
-        val saveNow = alwaysSave.value
 
         viewModelScope.launch {
+            when (val result = capturePhoto()) {
+                is CaptureResult.Pending ->
+                    if (capturedPhoto.value == null) capturedPhoto.value = result.photo
+                    else discardPhoto(result.photo)
 
-            val photo = runCatching { cameraRepo.takePhoto() }
-                .onFailure { Log.e("Camera", "Capture failed.", it) }
-                .getOrNull() ?: return@launch
-
-            when {
-                saveNow -> runCatching {
-                    mediaRepo.save(
-                        photo.file,
-                        photo.format,
-                        saveDirectory.value
-                    )
-                }.onFailure { Log.e("Camera", "Auto-save failed.", it) }
-
-                capturedPhoto.value == null -> capturedPhoto.value = photo
-                else -> mediaRepo.discard(photo.file)
+                is CaptureResult.Saved -> Unit
+                is CaptureResult.Failed -> Log.e("Camera", "Capture failed.", result.cause)
             }
         }
     }
@@ -136,13 +110,7 @@ class CameraViewModel(
     fun onSave() {
         val photo = capturedPhoto.value ?: return
         viewModelScope.launch {
-            runCatching {
-                mediaRepo.save(
-                    photo.file,
-                    photo.format,
-                    saveDirectory.value
-                )
-            }
+            savePhoto(photo)
                 .onSuccess { capturedPhoto.value = null }
                 .onFailure { Log.e("Camera", "Save failed.", it) }
         }
@@ -151,18 +119,14 @@ class CameraViewModel(
     fun onDiscard() {
         val photo = capturedPhoto.value ?: return
         capturedPhoto.value = null
-        viewModelScope.launch { mediaRepo.discard(photo.file) }
+        viewModelScope.launch { discardPhoto(photo) }
     }
 
     // ---------------------------------------------------------------
     // Live camera controls
     // ---------------------------------------------------------------
 
-    fun onFlip() {
-//        cameraRepo.setTorch(false)
-        lensFacing.update { it.flip() }
-    }
-
+    fun onFlip() = lensRepo.flip()
     fun onToggleTorch() = cameraRepo.setTorch(!uiState.value.torchEnabled)
     fun onFocus(point: Offset) = cameraRepo.focusOn(point.x, point.y)
     fun onZoomBy(factor: Float) = cameraRepo.zoomBy(factor)
@@ -185,9 +149,13 @@ class CameraViewModel(
             initializer {
                 val c = (this[APPLICATION_KEY] as CamApp).container
                 CameraViewModel(
-                    c.cameraRepository,
-                    c.settingsRepository,
-                    c.mediaRepository,
+                    c.cameraRepo,
+                    c.settingsRepo,
+                    c.lensRepo,
+                    c.capturePhoto,
+                    c.savePhoto,
+                    c.discardPhoto,
+                    c.observeBindConfig,
                 )
             }
         }

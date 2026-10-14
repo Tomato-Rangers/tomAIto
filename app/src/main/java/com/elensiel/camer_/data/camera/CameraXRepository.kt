@@ -33,6 +33,8 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -59,6 +61,9 @@ class CameraXRepository(private val context: Context) : CameraRepository {
 
     private val _captureStarted = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
     override val captureStarted = _captureStarted.asSharedFlow()
+
+    private val formatCache = mutableMapOf<LensFacing, Set<ImageFormat>>()
+    private val formatCacheLock = Mutex()
 
     /**
      * Binds the camera to [lifecycleOwner] and starts the preview.
@@ -104,17 +109,9 @@ class CameraXRepository(private val context: Context) : CameraRepository {
         // 2. Format resolution (per lens, so recomputed per bind)
         // ---------------------------------------------------------------
 
-        val nativeFormats: Set<ImageFormat> = ImageCapture
-            .getImageCaptureCapabilities(provider.getCameraInfo(cameraSelector))
-            .supportedOutputFormats
-            .mapNotNull { it.toImageFormat() }
-            .toSet()
-
-        // PNG/WEBP aren't native; presumably converted after capture, so always offered.
-        val supportedFormats = nativeFormats + setOf(ImageFormat.PNG, ImageFormat.WEBP)
-
         // Fall back to JPEG if the camera can't produce the requested format.
-        val effectiveFormat = if (format in supportedFormats) format else ImageFormat.JPEG
+        val effectiveFormat =
+            if (format in getSupportedFormats(lensFacing)) format else ImageFormat.JPEG
 
         // ---------------------------------------------------------------
         // 3. Use cases
@@ -195,7 +192,6 @@ class CameraXRepository(private val context: Context) : CameraRepository {
         _state.update {
             it.copy(
                 hasFlashUnit = cam.cameraInfo.hasFlashUnit(),
-                supportedFormats = supportedFormats,
             )
         }
 
@@ -228,6 +224,25 @@ class CameraXRepository(private val context: Context) : CameraRepository {
             }
         }
     }
+
+    override suspend fun getSupportedFormats(lensFacing: LensFacing): Set<ImageFormat> =
+        formatCacheLock.withLock {
+            formatCache.getOrPut(lensFacing) {
+                val provider = ProcessCameraProvider.awaitInstance(context)
+                val selector = CameraSelector.Builder()
+                    .requireLensFacing(lensFacing.toCameraX())
+                    .build()
+
+                val native = ImageCapture
+                    .getImageCaptureCapabilities(provider.getCameraInfo(selector))
+                    .supportedOutputFormats
+                    .mapNotNull { it.toImageFormat() }
+                    .toSet()
+
+                native + ImageFormat.entries.filter { it.needsTranscoding }
+            }
+        }
+
 
     override suspend fun takePhoto(): CapturedPhoto = suspendCancellableCoroutine { cont ->
         val capture = imageCapture

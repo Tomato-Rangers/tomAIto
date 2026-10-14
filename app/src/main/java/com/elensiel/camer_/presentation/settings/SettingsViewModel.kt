@@ -9,8 +9,8 @@ import com.elensiel.camer_.CamApp
 import com.elensiel.camer_.domain.model.ImageFormat
 import com.elensiel.camer_.domain.model.ShutterSoundPolicy
 import com.elensiel.camer_.domain.model.VolumeKeyShutter
-import com.elensiel.camer_.domain.repository.CameraRepository
 import com.elensiel.camer_.domain.repository.SettingsRepository
+import com.elensiel.camer_.domain.usecase.ObserveFormatOutputUseCase
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -18,25 +18,21 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 class SettingsViewModel(
-    cameraRepo: CameraRepository,
     private val settingsRepo: SettingsRepository,
+    observeFormat: ObserveFormatOutputUseCase,
 ) : ViewModel() {
     val uiState: StateFlow<SettingsUiState> = combine(
         settingsRepo.settings,
-        cameraRepo.state,
-    ) { settings, cam ->
-        val available = ImageFormat.entries.filter { it in cam.supportedFormats }
-
+        observeFormat(),
+    ) { s, f ->
         SettingsUiState(
-            alwaysSaveEnabled = settings.alwaysSaveEnabled,
-            imageFormat =
-                if (settings.imageFormat in available) settings.imageFormat
-                else ImageFormat.JPEG,
-            availableImageFormats = available,
-            saveLocation = settings.saveLocation,
-            shutterSoundEnabled = settings.shutterSoundEnabled,
+            alwaysSaveEnabled = s.alwaysSaveEnabled,
+            imageFormat = f.selected,
+            availableImageFormats = f.available,
+            saveLocation = s.saveLocation,
+            shutterSoundEnabled = s.shutterSoundEnabled,
             shutterSoundLocked = ShutterSoundPolicy.isForced,
-            volumeKeyShutter = settings.volumeKeyShutter,
+            volumeKeyShutter = s.volumeKeyShutter,
         )
     }.stateIn(
         viewModelScope,
@@ -68,7 +64,7 @@ class SettingsViewModel(
         val Factory = viewModelFactory {
             initializer {
                 val c = (this[APPLICATION_KEY] as CamApp).container
-                SettingsViewModel(c.cameraRepository, c.settingsRepository)
+                SettingsViewModel(c.settingsRepo, c.observeFormat)
             }
         }
     }
