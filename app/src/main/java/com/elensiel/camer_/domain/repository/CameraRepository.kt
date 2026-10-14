@@ -24,7 +24,6 @@ interface CameraRepository {
     )
 
     suspend fun getSupportedFormats(lensFacing: LensFacing): Set<ImageFormat>
-
     suspend fun takePhoto(): CapturedPhoto
     fun focusOn(x: Float, y: Float)
     fun setFlashMode(mode: FlashMode)

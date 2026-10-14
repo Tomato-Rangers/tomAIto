@@ -11,8 +11,7 @@ import com.elensiel.camer_.domain.model.LensFacing
 
 internal fun CaptureAspectRatio.toCameraXRatio() = when (this) {
     CaptureAspectRatio.RATIO_16_9 -> AspectRatio.RATIO_16_9
-    CaptureAspectRatio.RATIO_4_3,
-    CaptureAspectRatio.RATIO_1_1 -> AspectRatio.RATIO_4_3
+    CaptureAspectRatio.RATIO_4_3, CaptureAspectRatio.RATIO_1_1 -> AspectRatio.RATIO_4_3
 }
 
 internal fun CaptureAspectRatio.toViewPortRational() = when (this) {
@@ -27,12 +26,15 @@ internal fun FlashMode.toCameraX() = when (this) {
     FlashMode.AUTO -> ImageCapture.FLASH_MODE_AUTO
 }
 
-internal fun LensFacing.toCameraX() = when (this) {
-    LensFacing.BACK -> CameraSelector.LENS_FACING_BACK
-    LensFacing.FRONT -> CameraSelector.LENS_FACING_FRONT
-}
+internal fun LensFacing.toCameraSelector() = CameraSelector.Builder()
+    .requireLensFacing(
+        when (this) {
+            LensFacing.BACK -> CameraSelector.LENS_FACING_BACK
+            LensFacing.FRONT -> CameraSelector.LENS_FACING_FRONT
+        }
+    ).build()
 
-internal fun ImageFormat.toCameraXFormat() = when (this) {
+internal fun ImageFormat.toCameraX() = when (this) {
     ImageFormat.JPEG -> ImageCapture.OUTPUT_FORMAT_JPEG
     ImageFormat.RAW -> ImageCapture.OUTPUT_FORMAT_RAW
     ImageFormat.ULTRA_HDR -> ImageCapture.OUTPUT_FORMAT_JPEG_ULTRA_HDR
