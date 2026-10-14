@@ -6,6 +6,7 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.elensiel.camer_.domain.model.CaptureAspectRatio
+import com.elensiel.camer_.domain.model.FlashMode
 import com.elensiel.camer_.domain.model.ImageFormat
 import com.elensiel.camer_.domain.model.Settings
 import com.elensiel.camer_.domain.model.ShutterSoundPolicy
@@ -20,7 +21,7 @@ private val Context.dataStore by preferencesDataStore(name = "settings")
 class DataStoreSettingsRepository(private val context: Context) : SettingsRepository {
     private val alwaysSaveEnabled = booleanPreferencesKey("always_save_enabled")
     private val aspectKey = stringPreferencesKey("aspect_ratio")
-    private val flashKey = booleanPreferencesKey("flash_enabled")
+    private val flashModeKey = stringPreferencesKey("flash_mode")
     private val imageFormatKey = stringPreferencesKey("image_format")
     private val saveLocationKey = stringPreferencesKey("save_location")
     private val shutterSoundKey = booleanPreferencesKey("shutter_sound_enabled")
@@ -34,7 +35,9 @@ class DataStoreSettingsRepository(private val context: Context) : SettingsReposi
                 ?.let { runCatching { CaptureAspectRatio.valueOf(it) }.getOrNull() }
                 ?: CaptureAspectRatio.RATIO_4_3,
 
-            flashEnabled = p[flashKey] ?: false,
+            flashMode = p[flashModeKey]
+                ?.let { runCatching { FlashMode.valueOf(it) }.getOrNull() }
+                ?: FlashMode.OFF,
 
             imageFormat = p[imageFormatKey]
                 ?.let { runCatching { ImageFormat.valueOf(it) }.getOrNull() }
@@ -58,8 +61,8 @@ class DataStoreSettingsRepository(private val context: Context) : SettingsReposi
         context.dataStore.edit { it[aspectKey] = ratio.name }
     }
 
-    override suspend fun setFlashEnabled(enabled: Boolean) {
-        context.dataStore.edit { it[flashKey] = enabled }
+    override suspend fun setFlashMode(mode: FlashMode) {
+        context.dataStore.edit { it[flashModeKey] = mode.name }
     }
 
     override suspend fun setImageFormat(format: ImageFormat) {

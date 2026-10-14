@@ -150,7 +150,7 @@ private fun CameraUiDebug(initial: CameraUiState) {
             state = state,
             onCaptureClick = {},
             onFlipClick = {},
-            onFlashClick = { state = state.copy(flashEnabled = !state.flashEnabled) },
+            onFlashClick = { state = state.copy(flashMode = state.flashMode) },
             onTorchClick = { state = state.copy(torchEnabled = !state.torchEnabled) },
             onAspectRatioClick = { state = state.copy(aspectRatio = it) },
             onZoomPreset = { state = state.copy(zoomRatio = it) },

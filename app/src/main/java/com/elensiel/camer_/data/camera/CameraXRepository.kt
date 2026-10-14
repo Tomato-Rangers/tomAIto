@@ -22,6 +22,7 @@ import androidx.lifecycle.asFlow
 import com.elensiel.camer_.domain.model.CameraState
 import com.elensiel.camer_.domain.model.CaptureAspectRatio
 import com.elensiel.camer_.domain.model.CapturedPhoto
+import com.elensiel.camer_.domain.model.FlashMode
 import com.elensiel.camer_.domain.model.ImageFormat
 import com.elensiel.camer_.domain.model.LensFacing
 import com.elensiel.camer_.domain.repository.CameraRepository
@@ -41,7 +42,7 @@ class CameraXRepository(private val context: Context) : CameraRepository {
     private var camera: Camera? = null
     private var imageCapture: ImageCapture? = null
 
-    private var flashEnabled = false
+    private var flashMode = FlashMode.OFF
     private var imageFormat: ImageFormat? = null
     private var shutterSoundEnabled = false
     private val shutterSound = MediaActionSound().apply {
@@ -144,7 +145,7 @@ class CameraXRepository(private val context: Context) : CameraRepository {
             .setResolutionSelector(resolutionSelector)
             .setOutputFormat(effectiveFormat.toCameraXFormat())
             .build()
-            .also { it.flashMode = flashMode() }
+            .also { it.flashMode = flashMode.toCameraX() }
 
         // ---------------------------------------------------------------
         // 4. ViewPort + use case group
@@ -283,9 +284,8 @@ class CameraXRepository(private val context: Context) : CameraRepository {
         )
     }
 
-    override fun setFlashEnabled(enabled: Boolean) {
-        flashEnabled = enabled
-        imageCapture?.flashMode = flashMode()
+    override fun setFlashMode(mode: FlashMode) {
+        flashMode = flashMode.next()
     }
 
     override fun setTorch(enabled: Boolean) {
@@ -304,8 +304,4 @@ class CameraXRepository(private val context: Context) : CameraRepository {
     }
 
     override fun zoomBy(factor: Float) = setZoom(_state.value.zoomRatio * factor)
-
-    private fun flashMode() =
-        if (flashEnabled) ImageCapture.FLASH_MODE_ON
-        else ImageCapture.FLASH_MODE_OFF
 }

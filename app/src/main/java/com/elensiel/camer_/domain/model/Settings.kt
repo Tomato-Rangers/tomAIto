@@ -3,7 +3,7 @@ package com.elensiel.camer_.domain.model
 data class Settings(
     val alwaysSaveEnabled: Boolean = false,
     val aspectRatio: CaptureAspectRatio = CaptureAspectRatio.RATIO_4_3,
-    val flashEnabled: Boolean = false,
+    val flashMode: FlashMode = FlashMode.OFF,
     val imageFormat: ImageFormat = ImageFormat.JPEG,
     val saveLocation: String = "DCIM/camer-",
     val shutterSoundEnabled: Boolean = false,

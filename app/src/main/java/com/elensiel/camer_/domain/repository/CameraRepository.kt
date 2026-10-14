@@ -5,6 +5,7 @@ import androidx.lifecycle.LifecycleOwner
 import com.elensiel.camer_.domain.model.CameraState
 import com.elensiel.camer_.domain.model.CaptureAspectRatio
 import com.elensiel.camer_.domain.model.CapturedPhoto
+import com.elensiel.camer_.domain.model.FlashMode
 import com.elensiel.camer_.domain.model.ImageFormat
 import com.elensiel.camer_.domain.model.LensFacing
 import kotlinx.coroutines.flow.StateFlow
@@ -22,7 +23,7 @@ interface CameraRepository {
 
     suspend fun takePhoto(): CapturedPhoto
     fun focusOn(x: Float, y: Float)
-    fun setFlashEnabled(enabled: Boolean)
+    fun setFlashMode(mode: FlashMode)
     fun setTorch(enabled: Boolean)
     fun setShutterSound(enabled: Boolean)
     fun setZoom(ratio: Float)

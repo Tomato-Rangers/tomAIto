@@ -49,10 +49,7 @@ fun CameraControls(
             ) {
                 ActionButton(
                     onClick = onFlashClick,
-                    icon = painterResource(
-                        if (state.flashEnabled) R.drawable.flash_on
-                        else R.drawable.flash_off
-                    ),
+                    icon = painterResource(state.flashMode.icon),
                     contentDescription = "Flash",
                 )
 

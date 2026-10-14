@@ -5,6 +5,7 @@ import androidx.camera.core.AspectRatio
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageCapture
 import com.elensiel.camer_.domain.model.CaptureAspectRatio
+import com.elensiel.camer_.domain.model.FlashMode
 import com.elensiel.camer_.domain.model.ImageFormat
 import com.elensiel.camer_.domain.model.LensFacing
 
@@ -18,6 +19,12 @@ internal fun CaptureAspectRatio.toViewPortRational() = when (this) {
     CaptureAspectRatio.RATIO_16_9 -> Rational(9, 16)
     CaptureAspectRatio.RATIO_4_3 -> Rational(3, 4)
     CaptureAspectRatio.RATIO_1_1 -> Rational(1, 1)
+}
+
+internal fun FlashMode.toCameraX() = when (this) {
+    FlashMode.OFF -> ImageCapture.FLASH_MODE_OFF
+    FlashMode.ON -> ImageCapture.FLASH_MODE_ON
+    FlashMode.AUTO -> ImageCapture.FLASH_MODE_AUTO
 }
 
 internal fun LensFacing.toCameraX() = when (this) {

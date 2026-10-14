@@ -67,7 +67,7 @@ class CameraViewModel(
     ) { settings, cam, photo ->
         CameraUiState(
             aspectRatio = settings.aspectRatio,
-            flashEnabled = settings.flashEnabled,
+            flashMode = settings.flashMode,
             torchEnabled = cam.torchEnabled,
             hasFlashUnit = cam.hasFlashUnit,
             zoomRatio = cam.zoomRatio,
@@ -85,8 +85,8 @@ class CameraViewModel(
     // push settings changes into the camera
     init {
         viewModelScope.launch {
-            settingsRepo.settings.map { it.flashEnabled }.distinctUntilChanged()
-                .collect(cameraRepo::setFlashEnabled)
+            settingsRepo.settings.map { it.flashMode}.distinctUntilChanged()
+                .collect(cameraRepo::setFlashMode)
         }
         viewModelScope.launch {
             settingsRepo.settings.map { it.shutterSoundEnabled }.distinctUntilChanged()
@@ -156,7 +156,6 @@ class CameraViewModel(
     // ---------------------------------------------------------------
 
     fun onFlip() {
-        // TODO : survey this
 //        cameraRepo.setTorch(false)
         lensFacing.update { it.flip() }
     }
@@ -174,8 +173,8 @@ class CameraViewModel(
         viewModelScope.launch { settingsRepo.setAspectRatio(ratio) }
     }
 
-    fun onToggleFlash() {
-        viewModelScope.launch { settingsRepo.setFlashEnabled(!uiState.value.flashEnabled) }
+    fun onCycleFlash() {
+        viewModelScope.launch { settingsRepo.setFlashMode(uiState.value.flashMode.next()) }
     }
 
     companion object {
