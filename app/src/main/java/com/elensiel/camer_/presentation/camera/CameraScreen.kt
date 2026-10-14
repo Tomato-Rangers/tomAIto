@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import com.elensiel.camer_.presentation.components.ShutterAnimator
 
 @Composable
 fun CameraScreen(
@@ -24,6 +25,7 @@ fun CameraScreen(
         modifier = Modifier.fillMaxSize(),
         surfaceRequest = surfaceRequest,
         aspectRatio = state.aspectRatio,
+        captureStarted = viewModel.captureStarted,
         onTapFocus = viewModel::onFocus,
         onZoom = viewModel::onZoomBy,
     )

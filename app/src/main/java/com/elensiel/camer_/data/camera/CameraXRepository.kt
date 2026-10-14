@@ -2,7 +2,6 @@ package com.elensiel.camer_.data.camera
 
 import android.content.Context
 import android.media.MediaActionSound
-import android.util.Log
 import androidx.camera.core.Camera
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.FocusMeteringAction
@@ -27,8 +26,10 @@ import com.elensiel.camer_.domain.model.FlashMode
 import com.elensiel.camer_.domain.model.ImageFormat
 import com.elensiel.camer_.domain.model.LensFacing
 import com.elensiel.camer_.domain.repository.CameraRepository
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -56,6 +57,8 @@ class CameraXRepository(private val context: Context) : CameraRepository {
     private val _state = MutableStateFlow(CameraState())
     override val state = _state.asStateFlow()
 
+    private val _captureStarted = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+    override val captureStarted = _captureStarted.asSharedFlow()
 
     /**
      * Binds the camera to [lifecycleOwner] and starts the preview.
@@ -257,6 +260,7 @@ class CameraXRepository(private val context: Context) : CameraRepository {
             object : ImageCapture.OnImageSavedCallback {
                 override fun onCaptureStarted() {
                     if (shutterSoundEnabled) shutterSound.play(MediaActionSound.SHUTTER_CLICK)
+                    _captureStarted.tryEmit(Unit)
                 }
 
                 override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
@@ -287,7 +291,6 @@ class CameraXRepository(private val context: Context) : CameraRepository {
 
     override fun setFlashMode(mode: FlashMode) {
         flashMode = mode
-        Log.d("Flash", flashMode.name)
     }
 
     override fun setTorch(enabled: Boolean) {

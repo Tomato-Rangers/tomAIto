@@ -7,6 +7,7 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectTransformGestures
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -22,8 +23,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
 import com.elensiel.camer_.domain.model.CaptureAspectRatio
+import com.elensiel.camer_.presentation.components.ShutterAnimator
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -32,6 +35,7 @@ fun CameraPreview(
     modifier: Modifier = Modifier,
     surfaceRequest: SurfaceRequest?,
     aspectRatio: CaptureAspectRatio,
+    captureStarted: Flow<Unit>,
     onTapFocus: (Offset) -> Unit,
     onZoom: (Float) -> Unit,
 ) {
@@ -77,26 +81,32 @@ fun CameraPreview(
     // ---------------------------------------------------------------
 
     surfaceRequest?.let { request ->
-        CameraXViewfinder(
-            surfaceRequest = request,
-            modifier = modifier
-                .aspectRatio(aspectRatio.floatValue)
-                .cameraGestures(request)
-                .drawWithContent {
-                    drawContent()
+        Box(modifier = modifier.aspectRatio(aspectRatio.floatValue)) {
+            CameraXViewfinder(
+                surfaceRequest = request,
+                modifier = modifier
+                    .cameraGestures(request)
+                    .drawWithContent {
+                        drawContent()
 
-                    focusPoint?.let {
-                        drawCircle(
-                            color = Color.Yellow.copy(
-                                alpha = focusAlpha.coerceAtLeast(0.5f)
-                            ),
-                            radius = 45f,
-                            center = it,
-                            style = Stroke(width = 3f),
-                        )
-                    }
-                },
-            coordinateTransformer = coordinateTransformer,
-        )
+                        focusPoint?.let {
+                            drawCircle(
+                                color = Color.Yellow.copy(
+                                    alpha = focusAlpha.coerceAtLeast(0.5f)
+                                ),
+                                radius = 45f,
+                                center = it,
+                                style = Stroke(width = 3f),
+                            )
+                        }
+                    },
+                coordinateTransformer = coordinateTransformer,
+            )
+
+            ShutterAnimator(
+                captureStarted = captureStarted,
+                modifier = Modifier.matchParentSize(),
+            )
+        }
     }
 }

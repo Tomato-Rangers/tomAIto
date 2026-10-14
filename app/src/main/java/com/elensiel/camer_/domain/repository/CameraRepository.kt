@@ -8,11 +8,13 @@ import com.elensiel.camer_.domain.model.CapturedPhoto
 import com.elensiel.camer_.domain.model.FlashMode
 import com.elensiel.camer_.domain.model.ImageFormat
 import com.elensiel.camer_.domain.model.LensFacing
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 
 interface CameraRepository {
     val surfaceRequest: StateFlow<SurfaceRequest?>
     val state: StateFlow<CameraState>
+    val captureStarted: SharedFlow<Unit>
 
     suspend fun bind(
         lifecycleOwner: LifecycleOwner,

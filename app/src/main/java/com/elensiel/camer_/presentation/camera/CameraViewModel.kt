@@ -18,6 +18,7 @@ import com.elensiel.camer_.domain.repository.CameraRepository
 import com.elensiel.camer_.domain.repository.MediaRepository
 import com.elensiel.camer_.domain.repository.SettingsRepository
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -47,6 +48,8 @@ class CameraViewModel(
         .stateIn(viewModelScope, SharingStarted.Eagerly, "DCIM/camer-")
 
     val surfaceRequest: StateFlow<SurfaceRequest?> = cameraRepo.surfaceRequest
+
+    val captureStarted: SharedFlow<Unit> = cameraRepo.captureStarted
 
     val bindConfig: StateFlow<BindConfig?> = combine(
         settingsRepo.settings,
