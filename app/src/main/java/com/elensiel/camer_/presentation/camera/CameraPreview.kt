@@ -3,6 +3,7 @@ package com.elensiel.camer_.presentation.camera
 import androidx.camera.compose.CameraXViewfinder
 import androidx.camera.core.SurfaceRequest
 import androidx.camera.viewfinder.compose.MutableCoordinateTransformer
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -17,16 +18,17 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
 import com.elensiel.camer_.domain.model.CaptureAspectRatio
-import com.elensiel.camer_.presentation.components.ShutterAnimator
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -41,6 +43,8 @@ fun CameraPreview(
 ) {
     val coordinateTransformer = remember { MutableCoordinateTransformer() }
 
+    val shutter = remember { Animatable(0f) }
+
     var focusPoint by remember { mutableStateOf<Offset?>(null) }
     val focusAlpha by animateFloatAsState(
         targetValue = if (focusPoint == null) 1f else 0f,
@@ -53,6 +57,13 @@ fun CameraPreview(
         if (focusPoint != null) {
             delay(800.milliseconds)
             focusPoint = null
+        }
+    }
+
+    LaunchedEffect(captureStarted) {
+        captureStarted.collectLatest {
+            shutter.animateTo(1f, tween(150))
+            shutter.animateTo(0f, tween(150))
         }
     }
 
@@ -103,9 +114,10 @@ fun CameraPreview(
                 coordinateTransformer = coordinateTransformer,
             )
 
-            ShutterAnimator(
-                captureStarted = captureStarted,
-                modifier = Modifier.matchParentSize(),
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .drawBehind { drawRect(Color.Black, alpha = shutter.value) }
             )
         }
     }

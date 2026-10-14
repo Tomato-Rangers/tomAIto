@@ -31,7 +31,6 @@ import com.elensiel.camer_.presentation.camera.CameraControls
 import com.elensiel.camer_.presentation.camera.CameraScreen
 import com.elensiel.camer_.presentation.camera.CameraUiState
 import com.elensiel.camer_.presentation.camera.CameraViewModel
-import com.elensiel.camer_.presentation.components.ShutterAnimator
 import com.elensiel.camer_.presentation.components.VolumeKeyShutterHandler
 import com.elensiel.camer_.presentation.review.PhotoReviewScreen
 import com.elensiel.camer_.presentation.settings.SettingsScreen

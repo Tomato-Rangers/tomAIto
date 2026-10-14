@@ -274,8 +274,8 @@ class CameraXRepository(private val context: Context) : CameraRepository {
             ContextCompat.getMainExecutor(context),
             object : ImageCapture.OnImageSavedCallback {
                 override fun onCaptureStarted() {
-                    if (shutterSoundEnabled) shutterSound.play(MediaActionSound.SHUTTER_CLICK)
                     _captureStarted.tryEmit(Unit)
+                    if (shutterSoundEnabled) shutterSound.play(MediaActionSound.SHUTTER_CLICK)
                 }
 
                 override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
