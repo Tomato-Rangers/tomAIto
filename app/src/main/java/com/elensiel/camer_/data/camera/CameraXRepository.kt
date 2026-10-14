@@ -306,6 +306,7 @@ class CameraXRepository(private val context: Context) : CameraRepository {
 
     override fun setFlashMode(mode: FlashMode) {
         flashMode = mode
+        imageCapture?.flashMode = flashMode.toCameraX()
     }
 
     override fun setTorch(enabled: Boolean) {
