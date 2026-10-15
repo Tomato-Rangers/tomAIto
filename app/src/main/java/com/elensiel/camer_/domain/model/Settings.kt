@@ -7,5 +7,6 @@ data class Settings(
     val imageFormat: ImageFormat = ImageFormat.JPEG,
     val saveLocation: String = "DCIM/camer-",
     val shutterSoundEnabled: Boolean = false,
+    val shutterSoundLocked: Boolean = false,
     val volumeKeyShutter: VolumeKeyShutter = VolumeKeyShutter.OFF,
 )

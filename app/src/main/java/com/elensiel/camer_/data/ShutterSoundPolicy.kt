@@ -1,4 +1,4 @@
-package com.elensiel.camer_.domain.model
+package com.elensiel.camer_.data
 
 import android.annotation.SuppressLint
 import android.content.res.Resources
@@ -21,7 +21,7 @@ object ShutterSoundPolicy {
      * Evaluated once on first access and cached, since the value is a fixed
      * device property that never changes at runtime.
      *
-     * - API 33+: uses the official [MediaActionSound.mustPlayShutterSound].
+     * - API 33+: uses the official [android.media.MediaActionSound.mustPlayShutterSound].
      * - API 26-32: no public API exists, so this reads the framework's
      *   `config_camera_sound_forced` resource. This is unofficial. It may be
      *   missing on some devices, in which case the result is `false` and the
@@ -37,7 +37,7 @@ object ShutterSoundPolicy {
 
     /**
      * Pre-33 fallback. Looks up the framework bool `config_camera_sound_forced`
-     * via [Resources.getSystem]. The resource is not in the public `android.R`,
+     * via [android.content.res.Resources.getSystem]. The resource is not in the public `android.R`,
      * so it can only be reached by name. Any failure is treated as "not forced".
      */
     @SuppressLint("DiscouragedApi")

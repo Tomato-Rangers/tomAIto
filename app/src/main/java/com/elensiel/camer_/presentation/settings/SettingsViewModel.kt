@@ -6,8 +6,8 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.elensiel.camer_.CamApp
+import com.elensiel.camer_.data.ShutterSoundPolicy
 import com.elensiel.camer_.domain.model.ImageFormat
-import com.elensiel.camer_.domain.model.ShutterSoundPolicy
 import com.elensiel.camer_.domain.model.VolumeKeyShutter
 import com.elensiel.camer_.domain.repository.SettingsRepository
 import com.elensiel.camer_.domain.usecase.ObserveFormatOutputUseCase

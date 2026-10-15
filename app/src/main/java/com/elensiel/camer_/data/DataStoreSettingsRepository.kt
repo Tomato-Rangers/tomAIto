@@ -9,7 +9,6 @@ import com.elensiel.camer_.domain.model.CaptureAspectRatio
 import com.elensiel.camer_.domain.model.FlashMode
 import com.elensiel.camer_.domain.model.ImageFormat
 import com.elensiel.camer_.domain.model.Settings
-import com.elensiel.camer_.domain.model.ShutterSoundPolicy
 import com.elensiel.camer_.domain.model.VolumeKeyShutter
 import com.elensiel.camer_.domain.repository.SettingsRepository
 import kotlinx.coroutines.flow.Flow
@@ -46,6 +45,8 @@ class DataStoreSettingsRepository(private val context: Context) : SettingsReposi
             saveLocation = p[saveLocationKey] ?: "DCIM/camer-",
 
             shutterSoundEnabled = ShutterSoundPolicy.isForced || (p[shutterSoundKey] ?: false),
+
+            shutterSoundLocked = ShutterSoundPolicy.isForced,
 
             volumeKeyShutter = p[volumeKeyShutterKey]
                 ?.let { runCatching { VolumeKeyShutter.valueOf(it) }.getOrNull() }
