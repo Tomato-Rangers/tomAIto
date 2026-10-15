@@ -1,6 +1,6 @@
-# Camer-
+# camer-
 
-Camer- is an Android camera app built with Kotlin and Jetpack Compose.
+camer- is an Android camera app built with Kotlin and Jetpack Compose.
 
 ## Features
 
