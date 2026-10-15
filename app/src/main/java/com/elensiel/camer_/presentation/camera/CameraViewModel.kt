@@ -21,6 +21,7 @@ import com.elensiel.camer_.domain.usecase.CapturePhotoUseCase
 import com.elensiel.camer_.domain.usecase.DiscardPhotoUseCase
 import com.elensiel.camer_.domain.usecase.ObserveBindConfigUseCase
 import com.elensiel.camer_.domain.usecase.SavePhotoUseCase
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -43,6 +44,7 @@ class CameraViewModel(
 
     // Must be declared before uiState, which reads it during initialization.
     private val capturedPhoto = MutableStateFlow<CapturedPhoto?>(null)
+    private var saveJob: Job? = null
 
     val uiState: StateFlow<CameraUiState> = combine(
         settingsRepo.settings,
@@ -83,10 +85,6 @@ class CameraViewModel(
         }
     }
 
-    // ---------------------------------------------------------------
-    // Binding
-    // ---------------------------------------------------------------
-
     suspend fun bindCamera(owner: LifecycleOwner, config: BindConfig) =
         cameraRepo.bind(owner, config.lensFacing, config.aspectRatio, config.imageFormat)
 
@@ -111,8 +109,9 @@ class CameraViewModel(
     }
 
     fun onSave() {
+        if (saveJob?.isActive == true) return // double save guard
         val photo = capturedPhoto.value ?: return
-        viewModelScope.launch {
+        saveJob = viewModelScope.launch {
             savePhoto(photo)
                 .onSuccess { capturedPhoto.value = null }
                 .onFailure { Log.e(TAG, "Save failed.", it) }

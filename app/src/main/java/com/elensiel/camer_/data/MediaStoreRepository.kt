@@ -47,10 +47,16 @@ class MediaStoreRepository(
         val uri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values)
             ?: throw IOException("Failed to create MediaStore entry.")
 
-        resolver.openOutputStream(uri)?.use { outputStream ->
-            if (format.needsTranscoding) transcode(photoFile, format, outputStream)
-            else photoFile.inputStream().use { it.copyTo(outputStream) }
-        } ?: throw IOException("Failed to open output stream for $uri")
+        // guarantees a failed save never leaves an empty gallery entry, whatever the cause.
+        try {
+            resolver.openOutputStream(uri)?.use { outputStream ->
+                if (format.needsTranscoding) transcode(photoFile, format, outputStream)
+                else photoFile.inputStream().use { it.copyTo(outputStream) }
+            } ?: throw IOException("Failed to open output stream for $uri")
+        } catch (e: Exception) {
+            resolver.delete(uri, null, null)
+            throw e
+        }
 
         photoFile.delete() // delete cache
         uri
