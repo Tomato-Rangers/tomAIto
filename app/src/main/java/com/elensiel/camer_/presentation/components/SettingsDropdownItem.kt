@@ -1,11 +1,7 @@
 package com.elensiel.camer_.presentation.components
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.width
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.MaterialTheme
@@ -16,7 +12,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onSizeChanged
@@ -44,16 +39,10 @@ fun <T> SettingsDropdownItem(
         listOf(selected) + options.filter { it != selected }
     }
 
-    Row(
-        modifier = modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween,
+    SettingsItemRow(
+        title = title,
+        modifier = modifier,
     ) {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.titleMedium,
-        )
-
         Box {
             TextButton(
                 onClick = { isExpanded = true },
@@ -69,8 +58,10 @@ fun <T> SettingsDropdownItem(
             DropdownMenu(
                 expanded = isExpanded,
                 onDismissRequest = { isExpanded = false },
-                modifier = Modifier.width(buttonSize.width),
-                offset = DpOffset(0.dp, -(buttonSize.height + MenuVerticalPadding)),
+                offset = DpOffset(
+                    x = 0.dp,
+                    y = -(buttonSize.height + MenuVerticalPadding)
+                ),
             ) {
                 ordered.forEach { option ->
                     val isSelected = option == selected

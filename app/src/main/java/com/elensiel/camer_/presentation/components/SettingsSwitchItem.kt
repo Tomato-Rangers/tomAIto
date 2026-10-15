@@ -1,15 +1,8 @@
 package com.elensiel.camer_.presentation.components
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.selection.toggleable
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
 
@@ -21,29 +14,19 @@ fun SettingsSwitchItem(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
 ) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .toggleable(
-                value = checked,
-                role = Role.Switch,
-                onValueChange = onToggle,
-                enabled = enabled,
-            ),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween,
+    SettingsItemRow(
+        title = title,
+        modifier = modifier.toggleable(
+            value = checked,
+            role = Role.Switch,
+            onValueChange = onToggle,
+            enabled = enabled,
+        ),
     ) {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.titleMedium,
+        Switch(
+            checked = checked,
+            onCheckedChange = null,
+            enabled = enabled,
         )
-
-        Box {
-            Switch(
-                checked = checked,
-                onCheckedChange = null,
-                enabled = enabled,
-            )
-        }
     }
 }

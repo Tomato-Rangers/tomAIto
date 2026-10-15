@@ -81,20 +81,20 @@ fun SettingsScreen(
                 }
 
                 item {
-                    SettingsSwitchItem(
-                        title = "Always Save",
-                        checked = state.alwaysSaveEnabled,
-                        onToggle = viewModel::onAlwaysSaveEnabled,
-                    )
-                }
-
-                item {
                     SettingsDropdownItem(
                         title = "Volume Key as Shutter",
                         options = VolumeKeyShutter.entries,
                         selected = state.volumeKeyShutter,
                         optionLabel = { it.label },
                         onSelected = viewModel::onVolumeKeyShutter,
+                    )
+                }
+
+                item {
+                    SettingsSwitchItem(
+                        title = "Always Save",
+                        checked = state.alwaysSaveEnabled,
+                        onToggle = viewModel::onAlwaysSaveEnabled,
                     )
                 }
 
