@@ -10,6 +10,7 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -74,7 +75,8 @@ fun CameraPreview(
     Box(modifier = modifier.aspectRatio(aspectRatio.floatValue)) {
         CameraXViewfinder(
             surfaceRequest = surfaceRequest,
-            modifier = modifier
+            modifier = Modifier
+                .fillMaxSize()
                 .pointerInput(surfaceRequest) {
                     coroutineScope {
                         launch {
