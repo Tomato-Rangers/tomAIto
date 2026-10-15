@@ -35,7 +35,7 @@ import kotlin.time.Duration.Companion.milliseconds
 @Composable
 fun CameraPreview(
     modifier: Modifier = Modifier,
-    surfaceRequest: SurfaceRequest?,
+    surfaceRequest: SurfaceRequest,
     aspectRatio: CaptureAspectRatio,
     captureStarted: Flow<Unit>,
     onTapFocus: (Offset) -> Unit,
@@ -43,7 +43,10 @@ fun CameraPreview(
 ) {
     val coordinateTransformer = remember { MutableCoordinateTransformer() }
 
-    val shutter = remember { Animatable(0f) }
+    // Gesture handlers are keyed on surfaceRequest only; this keeps them
+    // calling the latest callbacks without restarting.
+    val currentOnTapFocus by rememberUpdatedState(onTapFocus)
+    val currentOnZoom by rememberUpdatedState(onZoom)
 
     var focusPoint by remember { mutableStateOf<Offset?>(null) }
     val focusAlpha by animateFloatAsState(
@@ -52,7 +55,8 @@ fun CameraPreview(
         label = "focusAlpha",
     )
 
-    // Clears the focus indicator dot after a short delay
+    val shutterFlash = remember { Animatable(0f) }
+
     LaunchedEffect(focusPoint) {
         if (focusPoint != null) {
             delay(800.milliseconds)
@@ -62,63 +66,49 @@ fun CameraPreview(
 
     LaunchedEffect(captureStarted) {
         captureStarted.collectLatest {
-            shutter.animateTo(1f, tween(150))
-            shutter.animateTo(0f, tween(150))
+            shutterFlash.animateTo(1f, tween(150))
+            shutterFlash.animateTo(0f, tween(150))
         }
     }
 
-    val currentOnTapFocus by rememberUpdatedState(onTapFocus)
-    val currentOnZoom by rememberUpdatedState(onZoom)
+    Box(modifier = modifier.aspectRatio(aspectRatio.floatValue)) {
+        CameraXViewfinder(
+            surfaceRequest = surfaceRequest,
+            modifier = modifier
+                .pointerInput(surfaceRequest) {
+                    coroutineScope {
+                        launch {
+                            detectTapGestures { offset ->
+                                // Metering needs surface coordinates; the dot is drawn at the raw offset.
+                                currentOnTapFocus(with(coordinateTransformer) { offset.transform() })
+                                focusPoint = offset
+                            }
+                        }
 
-    fun Modifier.cameraGestures(request: SurfaceRequest): Modifier =
-        pointerInput(request) {
-            coroutineScope {
-                launch {
-                    detectTapGestures { offset ->
-                        val s = with(coordinateTransformer) { offset.transform() }
-                        currentOnTapFocus(s)
-                        focusPoint = offset
+                        launch {
+                            detectTransformGestures { _, _, zoom, _ -> currentOnZoom(zoom) }
+                        }
                     }
                 }
+                .drawWithContent {
+                    drawContent()
 
-                launch {
-                    detectTransformGestures { _, _, zoom, _ -> currentOnZoom(zoom) }
-                }
-            }
-        }
+                    focusPoint?.let {
+                        drawCircle(
+                            color = Color.Yellow.copy(alpha = focusAlpha.coerceAtLeast(0.5f)),
+                            radius = 45f,
+                            center = it,
+                            style = Stroke(width = 3f),
+                        )
+                    }
+                },
+            coordinateTransformer = coordinateTransformer,
+        )
 
-    // ---------------------------------------------------------------
-    // UI
-    // ---------------------------------------------------------------
-
-    surfaceRequest?.let { request ->
-        Box(modifier = modifier.aspectRatio(aspectRatio.floatValue)) {
-            CameraXViewfinder(
-                surfaceRequest = request,
-                modifier = modifier
-                    .cameraGestures(request)
-                    .drawWithContent {
-                        drawContent()
-
-                        focusPoint?.let {
-                            drawCircle(
-                                color = Color.Yellow.copy(
-                                    alpha = focusAlpha.coerceAtLeast(0.5f)
-                                ),
-                                radius = 45f,
-                                center = it,
-                                style = Stroke(width = 3f),
-                            )
-                        }
-                    },
-                coordinateTransformer = coordinateTransformer,
-            )
-
-            Box(
-                modifier = Modifier
-                    .matchParentSize()
-                    .drawBehind { drawRect(Color.Black, alpha = shutter.value) }
-            )
-        }
+        Box(
+            modifier = Modifier
+                .matchParentSize()
+                .drawBehind { drawRect(Color.Black, alpha = shutterFlash.value) }
+        )
     }
 }

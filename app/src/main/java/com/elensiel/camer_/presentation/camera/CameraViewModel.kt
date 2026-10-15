@@ -40,12 +40,9 @@ class CameraViewModel(
     private val discardPhoto: DiscardPhotoUseCase,
     observeBindConfig: ObserveBindConfigUseCase,
 ) : ViewModel() {
-    private val capturedPhoto = MutableStateFlow<CapturedPhoto?>(null)
 
-    val surfaceRequest: StateFlow<SurfaceRequest?> = cameraRepo.surfaceRequest
-    val captureStarted: SharedFlow<Unit> = cameraRepo.captureStarted
-    val bindConfig: StateFlow<BindConfig?> = observeBindConfig()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
+    // Must be declared before uiState, which reads it during initialization.
+    private val capturedPhoto = MutableStateFlow<CapturedPhoto?>(null)
 
     val uiState: StateFlow<CameraUiState> = combine(
         settingsRepo.settings,
@@ -66,10 +63,15 @@ class CameraViewModel(
     }.stateIn(
         viewModelScope,
         SharingStarted.WhileSubscribed(5_000),
-        CameraUiState()
+        CameraUiState(),
     )
 
-    // push settings changes into the camera
+    val bindConfig: StateFlow<BindConfig?> = observeBindConfig()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
+
+    val surfaceRequest: StateFlow<SurfaceRequest?> = cameraRepo.surfaceRequest
+    val captureStarted: SharedFlow<Unit> = cameraRepo.captureStarted
+
     init {
         viewModelScope.launch {
             settingsRepo.settings.map { it.flashMode }.distinctUntilChanged()
@@ -81,12 +83,12 @@ class CameraViewModel(
         }
     }
 
-    suspend fun bindCamera(
-        owner: LifecycleOwner,
-        config: BindConfig,
-    ) = cameraRepo.bind(
-        owner, config.lensFacing, config.aspectRatio, config.imageFormat
-    )
+    // ---------------------------------------------------------------
+    // Binding
+    // ---------------------------------------------------------------
+
+    suspend fun bindCamera(owner: LifecycleOwner, config: BindConfig) =
+        cameraRepo.bind(owner, config.lensFacing, config.aspectRatio, config.imageFormat)
 
     // ---------------------------------------------------------------
     // Capture and review
@@ -98,11 +100,12 @@ class CameraViewModel(
         viewModelScope.launch {
             when (val result = capturePhoto()) {
                 is CaptureResult.Pending ->
+                    // A second tap can finish after another photo is already under review.
                     if (capturedPhoto.value == null) capturedPhoto.value = result.photo
                     else discardPhoto(result.photo)
 
                 is CaptureResult.Saved -> Unit
-                is CaptureResult.Failed -> Log.e("Camera", "Capture failed.", result.cause)
+                is CaptureResult.Failed -> Log.e(TAG, "Capture failed.", result.cause)
             }
         }
     }
@@ -112,7 +115,7 @@ class CameraViewModel(
         viewModelScope.launch {
             savePhoto(photo)
                 .onSuccess { capturedPhoto.value = null }
-                .onFailure { Log.e("Camera", "Save failed.", it) }
+                .onFailure { Log.e(TAG, "Save failed.", it) }
         }
     }
 
@@ -123,17 +126,7 @@ class CameraViewModel(
     }
 
     // ---------------------------------------------------------------
-    // Live camera controls
-    // ---------------------------------------------------------------
-
-    fun onFlip() = lensRepo.flip()
-    fun onToggleTorch() = cameraRepo.setTorch(!uiState.value.torchEnabled)
-    fun onFocus(point: Offset) = cameraRepo.focusOn(point.x, point.y)
-    fun onZoomBy(factor: Float) = cameraRepo.zoomBy(factor)
-    fun onZoomTo(ratio: Float) = cameraRepo.setZoom(ratio)
-
-    // ---------------------------------------------------------------
-    // Persisted settings
+    // Camera controls
     // ---------------------------------------------------------------
 
     fun onAspectRatio(ratio: CaptureAspectRatio) {
@@ -144,7 +137,21 @@ class CameraViewModel(
         viewModelScope.launch { settingsRepo.setFlashMode(uiState.value.flashMode.next()) }
     }
 
+    fun onToggleTorch() = cameraRepo.setTorch(!uiState.value.torchEnabled)
+
+    fun onFlip() = lensRepo.flip()
+    fun onFocus(point: Offset) = cameraRepo.focusOn(point.x, point.y)
+    fun onZoomBy(factor: Float) = cameraRepo.zoomBy(factor)
+    fun onZoomTo(ratio: Float) = cameraRepo.setZoom(ratio)
+
+    // ---------------------------------------------------------------
+    // Factory
+    // ---------------------------------------------------------------
+
     companion object {
+        // used for logs
+        private const val TAG = "Camera"
+
         val Factory = viewModelFactory {
             initializer {
                 val c = (this[APPLICATION_KEY] as CamApp).container

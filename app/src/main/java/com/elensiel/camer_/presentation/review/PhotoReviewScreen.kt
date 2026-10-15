@@ -42,17 +42,8 @@ fun PhotoReviewScreen(
                 .padding(32.dp),
             horizontalArrangement = Arrangement.spacedBy(24.dp)
         ) {
-            Button(
-                onClick = onDiscard,
-            ) {
-                Text("Discard")
-            }
-
-            Button(
-                onClick = onSave,
-            ) {
-                Text("Save")
-            }
+            Button(onClick = onDiscard) { Text("Discard") }
+            Button(onClick = onSave) { Text("Save") }
         }
     }
 }

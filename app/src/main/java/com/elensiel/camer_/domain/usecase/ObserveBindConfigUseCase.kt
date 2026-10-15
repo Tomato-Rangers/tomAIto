@@ -20,5 +20,6 @@ class ObserveBindConfigUseCase(
     ) { ratio, lens, format ->
         BindConfig(lens, ratio, format.selected)
     }
+        // Every emission causes a full camera unbind/rebind, so only emit real changes.
         .distinctUntilChanged()
 }

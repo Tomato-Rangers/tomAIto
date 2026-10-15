@@ -10,6 +10,7 @@ class SavePhotoUseCase(
     private val mediaRepo: MediaRepository,
     private val settingsRepo: SettingsRepository,
 ) {
+    /** Saves a photo that was held for review, using the current save location. */
     suspend operator fun invoke(photo: CapturedPhoto): Result<Uri> = runCatching {
         mediaRepo.save(
             photo.file,
