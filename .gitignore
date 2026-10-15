@@ -17,6 +17,7 @@ captures/
 *.aab
 *.apk
 output-metadata.json
+app/release/
 
 # IntelliJ / Android Studio
 *.iml
