@@ -16,6 +16,7 @@ import com.elensiel.camer_.presentation.components.ActionButton
 import com.elensiel.camer_.presentation.components.PillOption
 import com.elensiel.camer_.presentation.components.ZoomButtons
 import com.elensiel.camer_.presentation.components.glassPill
+import com.elensiel.camer_.presentation.components.icon
 
 private val EdgePadding = 24.dp
 
