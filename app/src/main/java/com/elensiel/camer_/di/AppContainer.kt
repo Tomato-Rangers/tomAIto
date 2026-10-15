@@ -16,7 +16,7 @@ class AppContainer(context: Context) {
     val settingsRepo = DataStoreSettingsRepository(context)
     val cameraRepo = CameraXRepository(context)
     val mediaRepo = MediaStoreRepository(context)
-    val lensRepo: LensRepository = LensCacheRepository()
+    val lensRepo = LensCacheRepository()
 
     val capturePhoto = CapturePhotoUseCase(cameraRepo, settingsRepo, mediaRepo)
     val savePhoto = SavePhotoUseCase(mediaRepo, settingsRepo)
