@@ -25,7 +25,7 @@ class MediaStoreRepository(
     override suspend fun save(
         photoFile: File,
         format: ImageFormat,
-        saveDirectory: String
+        saveDirectory: String,
     ): Uri = withContext(Dispatchers.IO) {
         val values = ContentValues().apply {
             put(
@@ -60,22 +60,22 @@ class MediaStoreRepository(
         withContext(Dispatchers.IO) { photoFile.delete() }
 
     private fun transcode(src: File, format: ImageFormat, output: OutputStream) {
+        // Resolved before decoding so an unsupported format fails early.
+        val compressFormat = when (format) {
+            ImageFormat.PNG -> Bitmap.CompressFormat.PNG
+            ImageFormat.WEBP ->
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) Bitmap.CompressFormat.WEBP_LOSSY
+                else Bitmap.CompressFormat.WEBP
+
+            else -> error("$format cannot be transcoded.")
+        }
+
         val bitmap = if (Build.VERSION.SDK_INT >= 28) {
             ImageDecoder.decodeBitmap(ImageDecoder.createSource(src)) { decoder, _, _ ->
                 decoder.allocator = ImageDecoder.ALLOCATOR_SOFTWARE
             }
         } else {
             decodeLegacy(src)
-        }
-
-        val compressFormat = when (format) {
-            ImageFormat.PNG -> Bitmap.CompressFormat.PNG
-            else ->
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                    Bitmap.CompressFormat.WEBP_LOSSY
-                } else {
-                    Bitmap.CompressFormat.WEBP
-                }
         }
 
         try {
