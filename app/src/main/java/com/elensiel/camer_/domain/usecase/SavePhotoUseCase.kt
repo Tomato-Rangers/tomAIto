@@ -1,6 +1,5 @@
 package com.elensiel.camer_.domain.usecase
 
-import android.net.Uri
 import com.elensiel.camer_.domain.model.CapturedPhoto
 import com.elensiel.camer_.domain.repository.MediaRepository
 import com.elensiel.camer_.domain.repository.SettingsRepository
@@ -11,7 +10,7 @@ class SavePhotoUseCase(
     private val settingsRepo: SettingsRepository,
 ) {
     /** Saves a photo that was held for review, using the current save location. */
-    suspend operator fun invoke(photo: CapturedPhoto): Result<Uri> = runCatching {
+    suspend operator fun invoke(photo: CapturedPhoto): Result<String> = runCatching {
         mediaRepo.save(
             photo.file,
             photo.format,

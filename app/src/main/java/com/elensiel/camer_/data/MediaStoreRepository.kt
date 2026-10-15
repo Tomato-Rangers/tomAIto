@@ -26,7 +26,7 @@ class MediaStoreRepository(
         photoFile: File,
         format: ImageFormat,
         saveDirectory: String,
-    ): Uri = withContext(Dispatchers.IO) {
+    ): String = withContext(Dispatchers.IO) {
         val values = ContentValues().apply {
             put(
                 MediaStore.Images.Media.DISPLAY_NAME,
@@ -59,7 +59,7 @@ class MediaStoreRepository(
         }
 
         photoFile.delete() // delete cache
-        uri
+        uri.toString()
     }
 
     override suspend fun discard(photoFile: File): Unit =
