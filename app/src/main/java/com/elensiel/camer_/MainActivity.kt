@@ -60,11 +60,6 @@ class MainActivity : ComponentActivity() {
                 "Camera",
                 "Needed to take photos with the app.",
             ),
-//            PermissionData(
-//                Manifest.permission.READ_EXTERNAL_STORAGE,
-//                "Read external storage",
-//                "Needed to know where to save captured photos.",
-//            )
         )
     }
 }
