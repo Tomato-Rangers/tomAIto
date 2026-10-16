@@ -10,7 +10,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.elensiel.camer_"
+        applicationId = "com.tomatorangers.tomaito"
         minSdk = 26
         targetSdk = 37
         versionCode = 1
@@ -36,6 +36,10 @@ android {
 
     buildFeatures {
         compose = true
+    }
+
+    androidResources {
+        noCompress += "tflite"
     }
 }
 
