@@ -28,6 +28,8 @@ camer- is an Android camera app built with Kotlin and Jetpack Compose.
 
 The project uses **MVVM (Model-View-ViewModel)** with a layered architecture.
 
+[![Architecture diagram of tomato-rangers/tomaito](https://gitdiagram.com/tomato-rangers/tomaito/diagram.png)](https://gitdiagram.com/tomato-rangers/tomaito?utm_source=readme&utm_medium=picture)
+
 - **Presentation:** Compose UI and ViewModels
 - **Domain:** Business logic, models, and use cases
 - **Data:** Repository implementations and data handling
