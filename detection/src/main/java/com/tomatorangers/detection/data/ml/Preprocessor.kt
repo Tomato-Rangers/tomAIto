@@ -72,7 +72,7 @@ class Preprocessor(private val model: LoadedModel) {
             val rgb = intArrayOf((pixel shr 16) and 0xFF, (pixel shr 8) and 0xFF, pixel and 0xFF)
             for (c in 0..2) {
                 // NCHW stores all R, then all G, then all B. NHWC stores R,G,B per pixel.
-                val index = if (channelsFirst) c * pixelCount * i else i * 3 + c
+                val index = if (channelsFirst) c * pixelCount + i else i * 3 + c
                 write(index, rgb[c])
             }
         }
