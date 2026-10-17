@@ -1,7 +1,7 @@
 package com.tomatorangers.detection.data.ml
 
-import com.tomatorangers.detection.domain.BoundingBox
-import com.tomatorangers.detection.domain.Detection
+import com.tomatorangers.detection.domain.model.BoundingBox
+import com.tomatorangers.detection.domain.model.Detection
 import org.tensorflow.lite.DataType
 import java.nio.ByteBuffer
 import kotlin.math.max

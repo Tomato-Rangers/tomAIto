@@ -1,4 +1,4 @@
-package com.tomatorangers.detection.domain
+package com.tomatorangers.detection.domain.model
 
 data class Detection(
     val classId: Int,
