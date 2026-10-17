@@ -75,4 +75,5 @@ dependencies {
     implementation(libs.androidx.datastore.preferences)
 
     implementation(project(":permission"))
+    implementation(project(":detection"))
 }
