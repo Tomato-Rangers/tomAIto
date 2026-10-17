@@ -31,4 +31,5 @@ dependencies {
     implementation(libs.litert)
     implementation(libs.litert.gpu)
     implementation(libs.litert.support)
+    testImplementation(libs.mockk)
 }
