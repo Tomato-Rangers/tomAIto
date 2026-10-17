@@ -5,7 +5,6 @@ import com.elensiel.camer_.data.DataStoreSettingsRepository
 import com.elensiel.camer_.data.LensCacheRepository
 import com.elensiel.camer_.data.MediaStoreRepository
 import com.elensiel.camer_.data.camera.CameraXRepository
-import com.elensiel.camer_.domain.repository.LensRepository
 import com.elensiel.camer_.domain.usecase.CapturePhotoUseCase
 import com.elensiel.camer_.domain.usecase.DiscardPhotoUseCase
 import com.elensiel.camer_.domain.usecase.ObserveBindConfigUseCase
