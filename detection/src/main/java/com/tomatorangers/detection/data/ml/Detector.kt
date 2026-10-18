@@ -2,7 +2,7 @@ package com.tomatorangers.detection.data.ml
 
 import android.content.Context
 import android.graphics.Bitmap
-import com.tomatorangers.detection.domain.Detection
+import com.tomatorangers.detection.domain.model.Detection
 import org.tensorflow.lite.DataType
 import java.io.Closeable
 import java.nio.ByteBuffer
@@ -30,7 +30,7 @@ class Detector(
      * buffer are reused between calls.
      */
     @Synchronized
-    fun detect(bitmap: Bitmap, rotationDegrees: Int = 0): List<Detection> {
+    fun detect(bitmap: Bitmap, rotationDegrees: Int): List<Detection> {
         val pre = preprocessor.process(bitmap, rotationDegrees)
 
         output.rewind()

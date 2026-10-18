@@ -10,12 +10,17 @@ import com.elensiel.camer_.domain.usecase.DiscardPhotoUseCase
 import com.elensiel.camer_.domain.usecase.ObserveBindConfigUseCase
 import com.elensiel.camer_.domain.usecase.ObserveFormatOutputUseCase
 import com.elensiel.camer_.domain.usecase.SavePhotoUseCase
+import com.tomatorangers.detection.data.ml.Detector
+import com.tomatorangers.detection.data.repository.DetectorRepository
 
 class AppContainer(context: Context) {
     val settingsRepo = DataStoreSettingsRepository(context)
     val cameraRepo = CameraXRepository(context)
     val mediaRepo = MediaStoreRepository(context)
     val lensRepo = LensCacheRepository()
+
+    val detector = lazy { Detector.create(context) }
+    val detectionRepo = DetectorRepository(detector)
 
     val capturePhoto = CapturePhotoUseCase(cameraRepo, settingsRepo, mediaRepo)
     val savePhoto = SavePhotoUseCase(mediaRepo, settingsRepo)
