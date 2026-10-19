@@ -33,7 +33,6 @@ import com.tomatorangers.detection.domain.model.CameraFrame
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -73,14 +72,35 @@ class CameraXRepository(private val context: Context) : CameraRepository {
     private val _captureStarted = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
     override val captureStarted = _captureStarted.asSharedFlow()
 
-    private val analysisExecutor = Executors.newSingleThreadExecutor()
-
     private val _frames = MutableSharedFlow<CameraFrame>(
         extraBufferCapacity = 1,
         onBufferOverflow = BufferOverflow.DROP_OLDEST,
     )
-    override val frames: SharedFlow<CameraFrame> = _frames.asSharedFlow()
+    override val frames = _frames.asSharedFlow()
 
+    private var analysis: ImageAnalysis? = null
+    private var analysisEnabled = true
+    private val analysisExecutor = Executors.newSingleThreadExecutor()
+
+    private val analyzer = ImageAnalysis.Analyzer { proxy ->
+        proxy.use {
+            if (_frames.subscriptionCount.value == 0) return@use
+            val full = it.toBitmap()
+
+            // ViewPort crop: toBitmap() ignores it, so apply manually.
+            val rect = it.cropRect
+            val bitmap =
+                if (rect.width() == full.width && rect.height() == full.height) full
+                else Bitmap.createBitmap(
+                    full,
+                    rect.left,
+                    rect.top,
+                    rect.width(),
+                    rect.height(),
+                )
+            _frames.tryEmit(CameraFrame(bitmap, it.imageInfo.rotationDegrees))
+        }
+    }
 
     /**
      * Binds the camera to [lifecycleOwner] and starts the preview.
@@ -130,7 +150,7 @@ class CameraXRepository(private val context: Context) : CameraRepository {
             .build()
             .also { it.flashMode = flashMode.toCameraX() }
 
-        val analysis = ImageAnalysis.Builder()
+        val analysisUseCase = ImageAnalysis.Builder()
             .setResolutionSelector(
                 ResolutionSelector.Builder()
                     .setAspectRatioStrategy(
@@ -150,26 +170,8 @@ class CameraXRepository(private val context: Context) : CameraRepository {
             .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
             .setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_YUV_420_888)
             .build()
-            .also { a ->
-                a.setAnalyzer(analysisExecutor) { proxy ->
-                    proxy.use {
-                        if (_frames.subscriptionCount.value == 0) return@use
-                        val full = it.toBitmap()
-
-                        // ViewPort crop: toBitmap() ignores it, so apply manually.
-                        val rect = it.cropRect
-                        val bitmap =
-                            if (rect.width() == full.width && rect.height() == full.height) full
-                            else Bitmap.createBitmap(
-                                full,
-                                rect.left,
-                                rect.top,
-                                rect.width(),
-                                rect.height(),
-                            )
-                        _frames.tryEmit(CameraFrame(bitmap, it.imageInfo.rotationDegrees))
-                    }
-                }
+            .also {
+                if (analysisEnabled) it.setAnalyzer(analysisExecutor, analyzer)
             }
 
         // Makes Preview and ImageCapture crop to the same region, so the saved
@@ -183,7 +185,7 @@ class CameraXRepository(private val context: Context) : CameraRepository {
             .setViewPort(viewPort)
             .addUseCase(preview)
             .addUseCase(capture)
-            .addUseCase(analysis)
+            .addUseCase(analysisUseCase)
             .build()
 
         provider.unbindAll()
@@ -215,6 +217,7 @@ class CameraXRepository(private val context: Context) : CameraRepository {
                 camera = null
                 imageCapture = null
                 imageFormat = null
+                analysis = null
             }
         }
     }
@@ -291,6 +294,13 @@ class CameraXRepository(private val context: Context) : CameraRepository {
     override fun setFlashMode(mode: FlashMode) {
         flashMode = mode
         imageCapture?.flashMode = mode.toCameraX()
+    }
+
+    override fun setAnalysisEnabled(enabled: Boolean) {
+        analysisEnabled = enabled
+        _state.update { it.copy(detectionEnabled = enabled) }
+        if (enabled) analysis?.setAnalyzer(analysisExecutor, analyzer)
+        else analysis?.clearAnalyzer()
     }
 
     override fun setTorch(enabled: Boolean) {

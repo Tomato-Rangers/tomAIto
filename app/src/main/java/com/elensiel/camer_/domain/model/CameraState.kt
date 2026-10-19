@@ -6,4 +6,5 @@ data class CameraState(
     val zoomRatio: Float = 1f,
     val minZoomRatio: Float = 1f,
     val maxZoomRatio: Float = 1f,
+    val detectionEnabled: Boolean = true,
 )

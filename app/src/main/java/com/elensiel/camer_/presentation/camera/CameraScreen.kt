@@ -52,5 +52,6 @@ fun CameraScreen(
             context.startActivity(intent)
         },
         onSettingsClick = onOpenSettings,
+        onDetectionClick = viewModel::onToggleDetection,
     )
 }
