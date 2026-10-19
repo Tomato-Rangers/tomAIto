@@ -7,8 +7,10 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 @Composable
 fun CameraScreen(
@@ -19,12 +21,14 @@ fun CameraScreen(
     onOpenSettings: () -> Unit,
 ) {
     val context = LocalContext.current
+    val detection by viewModel.detection.collectAsStateWithLifecycle()
 
     CameraPreview(
         modifier = Modifier.fillMaxSize(),
         surfaceRequest = surfaceRequest,
         aspectRatio = state.aspectRatio,
         captureStarted = viewModel.captureStarted,
+        detection = detection,
         onTapFocus = viewModel::onFocus,
         onZoom = viewModel::onZoomBy,
     )

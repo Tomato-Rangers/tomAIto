@@ -12,6 +12,7 @@ import com.elensiel.camer_.domain.usecase.ObserveFormatOutputUseCase
 import com.elensiel.camer_.domain.usecase.SavePhotoUseCase
 import com.tomatorangers.detection.data.ml.Detector
 import com.tomatorangers.detection.data.repository.DetectorRepository
+import com.tomatorangers.detection.domain.usecase.ObserveLiveDetectionUseCase
 
 class AppContainer(context: Context) {
     val settingsRepo = DataStoreSettingsRepository(context)
@@ -27,4 +28,5 @@ class AppContainer(context: Context) {
     val discardPhoto = DiscardPhotoUseCase(mediaRepo)
     val observeFormat = ObserveFormatOutputUseCase(settingsRepo, cameraRepo, lensRepo)
     val observeBindConfig = ObserveBindConfigUseCase(settingsRepo, lensRepo, observeFormat)
+    val observeLiveDetection = ObserveLiveDetectionUseCase(detectionRepo)
 }

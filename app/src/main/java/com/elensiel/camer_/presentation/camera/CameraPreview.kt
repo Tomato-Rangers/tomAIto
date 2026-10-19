@@ -25,7 +25,11 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.ContentScale
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.elensiel.camer_.domain.model.CaptureAspectRatio
+import com.tomatorangers.detection.domain.model.DetectionResult
+import com.tomatorangers.detection.presentation.DetectionOverlay
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -39,6 +43,7 @@ fun CameraPreview(
     surfaceRequest: SurfaceRequest,
     aspectRatio: CaptureAspectRatio,
     captureStarted: Flow<Unit>,
+    detection: DetectionResult? = null,
     onTapFocus: (Offset) -> Unit,
     onZoom: (Float) -> Unit,
 ) {
@@ -105,6 +110,13 @@ fun CameraPreview(
                     }
                 },
             coordinateTransformer = coordinateTransformer,
+            contentScale = ContentScale.Crop,
+        )
+
+        DetectionOverlay(
+            result = detection,
+            modifier = Modifier.matchParentSize(),
+            contentScale = ContentScale.Crop,
         )
 
         Box(

@@ -2,8 +2,10 @@ package com.elensiel.camer_.data.camera
 
 import android.content.Context
 import android.media.MediaActionSound
+import android.util.Size
 import androidx.camera.core.Camera
 import androidx.camera.core.FocusMeteringAction
+import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCaptureException
 import androidx.camera.core.Preview
@@ -13,11 +15,13 @@ import androidx.camera.core.UseCaseGroup
 import androidx.camera.core.ViewPort
 import androidx.camera.core.resolutionselector.AspectRatioStrategy
 import androidx.camera.core.resolutionselector.ResolutionSelector
+import androidx.camera.core.resolutionselector.ResolutionStrategy
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.lifecycle.awaitInstance
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.asFlow
+import coil3.Bitmap
 import com.elensiel.camer_.domain.model.CameraState
 import com.elensiel.camer_.domain.model.CaptureAspectRatio
 import com.elensiel.camer_.domain.model.CapturedPhoto
@@ -25,8 +29,11 @@ import com.elensiel.camer_.domain.model.FlashMode
 import com.elensiel.camer_.domain.model.ImageFormat
 import com.elensiel.camer_.domain.model.LensFacing
 import com.elensiel.camer_.domain.repository.CameraRepository
+import com.tomatorangers.detection.domain.model.CameraFrame
+import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -37,6 +44,7 @@ import kotlinx.coroutines.sync.withLock
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Locale
+import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
@@ -64,6 +72,14 @@ class CameraXRepository(private val context: Context) : CameraRepository {
 
     private val _captureStarted = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
     override val captureStarted = _captureStarted.asSharedFlow()
+
+    private val analysisExecutor = Executors.newSingleThreadExecutor()
+
+    private val _frames = MutableSharedFlow<CameraFrame>(
+        extraBufferCapacity = 1,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST,
+    )
+    override val frames: SharedFlow<CameraFrame> = _frames.asSharedFlow()
 
 
     /**
@@ -114,6 +130,46 @@ class CameraXRepository(private val context: Context) : CameraRepository {
             .build()
             .also { it.flashMode = flashMode.toCameraX() }
 
+        val analysis = ImageAnalysis.Builder()
+            .setResolutionSelector(
+                ResolutionSelector.Builder()
+                    .setAspectRatioStrategy(
+                        AspectRatioStrategy(
+                            aspectRatio.toCameraXRatio(),
+                            AspectRatioStrategy.FALLBACK_RULE_AUTO,
+                        )
+                    )
+                    .setResolutionStrategy(
+                        ResolutionStrategy(
+                            Size(640, 480),
+                            ResolutionStrategy.FALLBACK_RULE_CLOSEST_LOWER_THEN_HIGHER,
+                        )
+                    )
+                    .build()
+            )
+            .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+            .setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_YUV_420_888)
+            .build()
+            .also { a ->
+                a.setAnalyzer(analysisExecutor) { proxy ->
+                    proxy.use {
+                        if (_frames.subscriptionCount.value == 0) return@use
+                        val full = it.toBitmap()
+                        val rect = it.cropRect
+                        val bitmap =
+                            if (rect.width() == full.width && rect.height() == full.height) full
+                            else Bitmap.createBitmap(
+                                full,
+                                rect.left,
+                                rect.top,
+                                rect.width(),
+                                rect.height(),
+                            )
+                        _frames.tryEmit(CameraFrame(bitmap, it.imageInfo.rotationDegrees))
+                    }
+                }
+            }
+
         // Makes Preview and ImageCapture crop to the same region, so the saved
         // photo matches the preview. This is how 1:1 works: the sensor streams
         // 4:3 and the ViewPort crops to a square. Only applies to grouped use cases.
@@ -125,6 +181,7 @@ class CameraXRepository(private val context: Context) : CameraRepository {
             .setViewPort(viewPort)
             .addUseCase(preview)
             .addUseCase(capture)
+            .addUseCase(analysis)
             .build()
 
         provider.unbindAll()

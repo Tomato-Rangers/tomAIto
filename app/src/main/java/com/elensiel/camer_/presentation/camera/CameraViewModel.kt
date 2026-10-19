@@ -14,6 +14,7 @@ import com.elensiel.camer_.domain.model.BindConfig
 import com.elensiel.camer_.domain.model.CaptureAspectRatio
 import com.elensiel.camer_.domain.model.CaptureResult
 import com.elensiel.camer_.domain.model.CapturedPhoto
+import com.elensiel.camer_.domain.model.LensFacing
 import com.elensiel.camer_.domain.repository.CameraRepository
 import com.elensiel.camer_.domain.repository.LensRepository
 import com.elensiel.camer_.domain.repository.SettingsRepository
@@ -21,6 +22,8 @@ import com.elensiel.camer_.domain.usecase.CapturePhotoUseCase
 import com.elensiel.camer_.domain.usecase.DiscardPhotoUseCase
 import com.elensiel.camer_.domain.usecase.ObserveBindConfigUseCase
 import com.elensiel.camer_.domain.usecase.SavePhotoUseCase
+import com.tomatorangers.detection.domain.model.DetectionResult
+import com.tomatorangers.detection.domain.usecase.ObserveLiveDetectionUseCase
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -40,6 +43,7 @@ class CameraViewModel(
     private val savePhoto: SavePhotoUseCase,
     private val discardPhoto: DiscardPhotoUseCase,
     observeBindConfig: ObserveBindConfigUseCase,
+    observeLiveDetection: ObserveLiveDetectionUseCase,
 ) : ViewModel() {
 
     // Must be declared before uiState, which reads it during initialization.
@@ -73,6 +77,14 @@ class CameraViewModel(
 
     val surfaceRequest: StateFlow<SurfaceRequest?> = cameraRepo.surfaceRequest
     val captureStarted: SharedFlow<Unit> = cameraRepo.captureStarted
+
+    val detection: StateFlow<DetectionResult?> = combine(
+        observeLiveDetection(cameraRepo.frames),
+        lensRepo.lensFacing,
+    ) { result, lens ->
+        if (lens == LensFacing.FRONT) result.mirrored()
+        else result
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     init {
         viewModelScope.launch {
@@ -162,6 +174,7 @@ class CameraViewModel(
                     c.savePhoto,
                     c.discardPhoto,
                     c.observeBindConfig,
+                    c.observeLiveDetection,
                 )
             }
         }
