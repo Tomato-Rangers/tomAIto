@@ -13,14 +13,9 @@ import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.tomatorangers.detection.domain.model.ClassColors
 import com.tomatorangers.detection.domain.model.DetectionResult
 import kotlin.math.roundToInt
-
-private val ClassColors = listOf(
-    Color.Red, // DAMAGED
-    Color.Green, // RIPE
-    Color.Yellow, // UNRIPE
-)
 
 @Composable
 fun DetectionOverlay(
@@ -41,11 +36,11 @@ fun DetectionOverlay(
         )
 
         result.detections.forEach { d ->
-            val color = ClassColors[d.classId % ClassColors.size]
+            val color = ClassColors.forClass(d.classId)
             val topLeft = Offset(d.box.left * scale, d.box.top * scale) + offset
 
             drawRect(
-                color = color,
+                color = Color(color),
                 topLeft = topLeft,
                 size = Size(d.box.width * scale, d.box.height * scale),
                 style = Stroke(3.dp.toPx()),
@@ -55,12 +50,11 @@ fun DetectionOverlay(
                 text = "${d.label} ${(d.confidence * 100).roundToInt()}%",
                 topLeft = topLeft,
                 style = TextStyle(
-                    color = Color.Black,
-                    background = color,
+                    color = Color(ClassColors.LABEL_TEXT),
+                    background = Color(color),
                     fontSize = 12.sp,
                 ),
             )
         }
     }
-
 }

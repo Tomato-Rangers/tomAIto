@@ -5,18 +5,13 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.RectF
+import com.tomatorangers.detection.domain.model.ClassColors
 import com.tomatorangers.detection.domain.model.Detection
 import com.tomatorangers.detection.domain.repository.DetectionRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
 import kotlin.math.roundToInt
-
-private val ClassColors = intArrayOf(
-    Color.RED, // UNRIPE
-    Color.GREEN, // RIPE
-    Color.YELLOW, // UNRIPE
-)
 
 class AnnotatePhotoUseCase(
     private val detectionRepo: DetectionRepository,
@@ -62,14 +57,14 @@ class AnnotatePhotoUseCase(
         }
         val labelBgPaint = Paint(Paint.ANTI_ALIAS_FLAG)
         val labelTextPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = Color.BLACK
+            color = ClassColors.LABEL_TEXT
             textSize = 14f * unit
         }
         val metrics = labelTextPaint.fontMetrics
         val labelHeight = metrics.descent - metrics.ascent + pad * 2
 
         detections.forEach { d ->
-            val color = ClassColors[d.classId % ClassColors.size]
+            val color = ClassColors.forClass(d.classId)
             boxPaint.color = color
             labelBgPaint.color = color
 
