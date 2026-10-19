@@ -8,6 +8,7 @@ appcompat = "1.8.0"
 material = "1.14.0"
 lifecycleRuntimeKtx = "2.11.0"
 activityCompose = "1.13.0"
+composeFoundation = "1.12.1"
 kotlin = "2.4.21"
 composeBom = "2026.09.00"
 cameraX = "1.6.2"
@@ -51,6 +52,7 @@ litert = { module = "com.google.ai.edge.litert:litert", version.ref = "litert" }
 litert-gpu = { module = "com.google.ai.edge.litert:litert-gpu", version.ref = "litert" }
 litert-support = { module = "com.google.ai.edge.litert:litert-support", version.ref = "litert" }
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
+androidx-compose-foundation = { module = "androidx.compose.foundation:foundation", version.ref = "composeFoundation" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
