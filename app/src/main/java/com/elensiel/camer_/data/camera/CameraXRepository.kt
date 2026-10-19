@@ -155,6 +155,8 @@ class CameraXRepository(private val context: Context) : CameraRepository {
                     proxy.use {
                         if (_frames.subscriptionCount.value == 0) return@use
                         val full = it.toBitmap()
+
+                        // ViewPort crop: toBitmap() ignores it, so apply manually.
                         val rect = it.cropRect
                         val bitmap =
                             if (rect.width() == full.width && rect.height() == full.height) full
