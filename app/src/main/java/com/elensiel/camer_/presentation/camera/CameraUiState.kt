@@ -15,4 +15,5 @@ data class CameraUiState(
     val minZoomRatio: Float = 1f,
     val maxZoomRatio: Float = 1f,
     val volumeKeyShutter: VolumeKeyShutter = VolumeKeyShutter.OFF,
+    val detectionEnabled: Boolean = true,
 )

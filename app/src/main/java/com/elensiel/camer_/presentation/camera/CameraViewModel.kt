@@ -14,6 +14,7 @@ import com.elensiel.camer_.domain.model.BindConfig
 import com.elensiel.camer_.domain.model.CaptureAspectRatio
 import com.elensiel.camer_.domain.model.CaptureResult
 import com.elensiel.camer_.domain.model.CapturedPhoto
+import com.elensiel.camer_.domain.model.LensFacing
 import com.elensiel.camer_.domain.repository.CameraRepository
 import com.elensiel.camer_.domain.repository.LensRepository
 import com.elensiel.camer_.domain.repository.SettingsRepository
@@ -21,6 +22,9 @@ import com.elensiel.camer_.domain.usecase.CapturePhotoUseCase
 import com.elensiel.camer_.domain.usecase.DiscardPhotoUseCase
 import com.elensiel.camer_.domain.usecase.ObserveBindConfigUseCase
 import com.elensiel.camer_.domain.usecase.SavePhotoUseCase
+import com.tomatorangers.detection.domain.model.DetectionResult
+import com.tomatorangers.detection.domain.usecase.ObserveLiveDetectionUseCase
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -28,6 +32,8 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -40,6 +46,7 @@ class CameraViewModel(
     private val savePhoto: SavePhotoUseCase,
     private val discardPhoto: DiscardPhotoUseCase,
     observeBindConfig: ObserveBindConfigUseCase,
+    observeLiveDetection: ObserveLiveDetectionUseCase,
 ) : ViewModel() {
 
     // Must be declared before uiState, which reads it during initialization.
@@ -61,6 +68,7 @@ class CameraViewModel(
             maxZoomRatio = cam.maxZoomRatio,
             capturedPhotoFile = photo?.file,
             volumeKeyShutter = settings.volumeKeyShutter,
+            detectionEnabled = settings.liveDetectionEnabled,
         )
     }.stateIn(
         viewModelScope,
@@ -74,6 +82,21 @@ class CameraViewModel(
     val surfaceRequest: StateFlow<SurfaceRequest?> = cameraRepo.surfaceRequest
     val captureStarted: SharedFlow<Unit> = cameraRepo.captureStarted
 
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val detection: StateFlow<DetectionResult?> = settingsRepo.settings
+        .map { it.liveDetectionEnabled }
+        .distinctUntilChanged()
+        .flatMapLatest { enabled ->
+            if (!enabled) flowOf(null)
+            else combine(
+                observeLiveDetection(cameraRepo.frames),
+                lensRepo.lensFacing,
+            ) { result, lens ->
+                if (lens == LensFacing.FRONT) result.mirrored()
+                else result
+            }
+        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
+
     init {
         viewModelScope.launch {
             settingsRepo.settings.map { it.flashMode }.distinctUntilChanged()
@@ -82,6 +105,10 @@ class CameraViewModel(
         viewModelScope.launch {
             settingsRepo.settings.map { it.shutterSoundEnabled }.distinctUntilChanged()
                 .collect(cameraRepo::setShutterSound)
+        }
+        viewModelScope.launch {
+            settingsRepo.settings.map { it.liveDetectionEnabled }.distinctUntilChanged()
+                .collect(cameraRepo::setAnalysisEnabled)
         }
     }
 
@@ -143,6 +170,10 @@ class CameraViewModel(
     fun onZoomBy(factor: Float) = cameraRepo.zoomBy(factor)
     fun onZoomTo(ratio: Float) = cameraRepo.setZoom(ratio)
 
+    fun onToggleDetection() {
+        viewModelScope.launch { settingsRepo.setLiveDetectionEnabled(!uiState.value.detectionEnabled) }
+    }
+
     // ---------------------------------------------------------------
     // Factory
     // ---------------------------------------------------------------
@@ -162,6 +193,7 @@ class CameraViewModel(
                     c.savePhoto,
                     c.discardPhoto,
                     c.observeBindConfig,
+                    c.observeLiveDetection,
                 )
             }
         }

@@ -22,6 +22,7 @@ class DataStoreSettingsRepository(private val context: Context) : SettingsReposi
     private val aspectKey = stringPreferencesKey("aspect_ratio")
     private val flashModeKey = stringPreferencesKey("flash_mode")
     private val imageFormatKey = stringPreferencesKey("image_format")
+    private val liveDetectionEnabledKey = booleanPreferencesKey("live_detection_enabled")
     private val saveLocationKey = stringPreferencesKey("save_location")
     private val shutterSoundKey = booleanPreferencesKey("shutter_sound_enabled")
     private val volumeKeyShutterKey = stringPreferencesKey("volume_key_shutter_mode")
@@ -41,6 +42,8 @@ class DataStoreSettingsRepository(private val context: Context) : SettingsReposi
             imageFormat = p[imageFormatKey]
                 ?.let { runCatching { ImageFormat.valueOf(it) }.getOrNull() }
                 ?: ImageFormat.JPEG,
+
+            liveDetectionEnabled = p[liveDetectionEnabledKey] ?: true,
 
             saveLocation = p[saveLocationKey] ?: "DCIM/camer-",
 
@@ -68,6 +71,10 @@ class DataStoreSettingsRepository(private val context: Context) : SettingsReposi
 
     override suspend fun setImageFormat(format: ImageFormat) {
         context.dataStore.edit { it[imageFormatKey] = format.name }
+    }
+
+    override suspend fun setLiveDetectionEnabled(enabled: Boolean) {
+        context.dataStore.edit { it[liveDetectionEnabledKey] = enabled }
     }
 
     override suspend fun setSaveLocation(location: String) {

@@ -25,3 +25,4 @@ dependencyResolutionManagement {
 rootProject.name = "camer-"
 include(":app")
 include(":permission")
+include(":detection")
