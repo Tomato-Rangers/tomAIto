@@ -194,6 +194,7 @@ class CameraXRepository(private val context: Context) : CameraRepository {
         camera = cam
         imageCapture = capture
         imageFormat = effectiveFormat
+        analysis = analysisUseCase
 
         _state.update { it.copy(hasFlashUnit = cam.cameraInfo.hasFlashUnit()) }
 
@@ -298,7 +299,6 @@ class CameraXRepository(private val context: Context) : CameraRepository {
 
     override fun setAnalysisEnabled(enabled: Boolean) {
         analysisEnabled = enabled
-        _state.update { it.copy(detectionEnabled = enabled) }
         if (enabled) analysis?.setAnalyzer(analysisExecutor, analyzer)
         else analysis?.clearAnalyzer()
     }

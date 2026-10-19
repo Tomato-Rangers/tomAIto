@@ -82,10 +82,10 @@ class CameraViewModel(
     val surfaceRequest: StateFlow<SurfaceRequest?> = cameraRepo.surfaceRequest
     val captureStarted: SharedFlow<Unit> = cameraRepo.captureStarted
 
-    private val detectionEnabled = MutableStateFlow(true)
-
     @OptIn(ExperimentalCoroutinesApi::class)
-    val detection: StateFlow<DetectionResult?> = detectionEnabled
+    val detection: StateFlow<DetectionResult?> = settingsRepo.settings
+        .map { it.liveDetectionEnabled }
+        .distinctUntilChanged()
         .flatMapLatest { enabled ->
             if (!enabled) flowOf(null)
             else combine(
@@ -171,9 +171,7 @@ class CameraViewModel(
     fun onZoomTo(ratio: Float) = cameraRepo.setZoom(ratio)
 
     fun onToggleDetection() {
-        val enabled = !detectionEnabled.value
-        detectionEnabled.value = enabled
-        cameraRepo.setAnalysisEnabled(enabled)
+        viewModelScope.launch { settingsRepo.setLiveDetectionEnabled(!uiState.value.detectionEnabled) }
     }
 
     // ---------------------------------------------------------------
