@@ -6,7 +6,6 @@ import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.lifecycle.awaitInstance
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.asFlow
-import coil3.Bitmap
 import com.elensiel.camer_.domain.model.CameraState
 import com.elensiel.camer_.domain.model.CaptureAspectRatio
 import com.elensiel.camer_.domain.model.CapturedPhoto
@@ -14,8 +13,6 @@ import com.elensiel.camer_.domain.model.FlashMode
 import com.elensiel.camer_.domain.model.ImageFormat
 import com.elensiel.camer_.domain.model.LensFacing
 import com.elensiel.camer_.domain.repository.CameraRepository
-import com.tomatorangers.detection.domain.model.CameraFrame
-import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -25,8 +22,9 @@ import kotlinx.coroutines.flow.update
 class CameraXRepository(private val context: Context) : CameraRepository {
 
     private val session = CameraSession()
+    private val analyzer = FrameAnalyzer()
     private val formats = SupportedFormats(context)
-    private val useCaseGroup = CameraUseCaseBuilder(session)
+    private val useCaseGroup = CameraUseCaseBuilder(session, analyzer)
     private val controller = CameraController(session)
 
     private val _captureStarted = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
@@ -35,6 +33,7 @@ class CameraXRepository(private val context: Context) : CameraRepository {
     override val surfaceRequest: StateFlow<SurfaceRequest?> = session.surfaceRequest.asStateFlow()
     override val state: StateFlow<CameraState> = session.state.asStateFlow()
     override val captureStarted = _captureStarted.asSharedFlow()
+    override val frames = analyzer.frames
 
     /**
      * Binds the camera to [lifecycleOwner] and starts the preview.
@@ -97,7 +96,12 @@ class CameraXRepository(private val context: Context) : CameraRepository {
     override fun setTorch(enabled: Boolean) = controller.setTorch(enabled)
     override fun setZoom(ratio: Float) = controller.setZoom(ratio)
     override fun zoomBy(factor: Float) = controller.zoomBy(factor)
+
     override fun setShutterSound(enabled: Boolean) {
         capturer.shutterSoundEnabled = enabled
+    }
+
+    override fun setAnalysisEnabled(enabled: Boolean) {
+        analyzer.enabled = enabled
     }
 }

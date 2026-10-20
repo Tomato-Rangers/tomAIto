@@ -82,10 +82,26 @@ class CameraViewModel(
     val surfaceRequest: StateFlow<SurfaceRequest?> = cameraRepo.surfaceRequest
     val captureStarted: SharedFlow<Unit> = cameraRepo.captureStarted
 
+    /**
+     * Live detection result for the camera preview, or `null` when there is nothing to draw
+     * (live detection is off, or no frame has been processed yet).
+     *
+     * Boxes are in the coordinate space of the analyzed frame after rotation, and are mirrored
+     * for the front lens so they line up with the mirrored preview.
+     *
+     * Shared via [SharingStarted.WhileSubscribed] with a 5 s grace period, so detection stops
+     * shortly after the UI stops collecting (e.g. app backgrounded or settings opened), and a
+     * quick return such as a configuration change doesn't restart the pipeline.
+     */
     @OptIn(ExperimentalCoroutinesApi::class)
     val detection: StateFlow<DetectionResult?> = settingsRepo.settings
         .map { it.liveDetectionEnabled }
         .distinctUntilChanged()
+        // Restarts the inner flow whenever the setting changes:
+        //  - off: emits a single null, which clears any boxes still on screen.
+        //  - on: runs detection on camera frames and mirrors the boxes for the front lens.
+        // While off, nothing collects cameraRepo.frames, so the analyzer skips bitmap
+        // conversion and the model never runs.
         .flatMapLatest { enabled ->
             if (!enabled) flowOf(null)
             else combine(
@@ -95,7 +111,8 @@ class CameraViewModel(
                 if (lens == LensFacing.FRONT) result.mirrored()
                 else result
             }
-        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     init {
         viewModelScope.launch {
