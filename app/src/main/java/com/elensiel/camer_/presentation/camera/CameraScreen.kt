@@ -40,7 +40,7 @@ fun CameraScreen(
         state = state,
         onCaptureClick = viewModel::onCapture,
         onFlipClick = viewModel::onFlip,
-        onFlashClick = viewModel::onCycleFlash,
+        onFlashModeSelect = viewModel::onFlashMode,
         onTorchClick = viewModel::onToggleTorch,
         onAspectRatioClick = viewModel::onAspectRatio,
         onZoomPreset = viewModel::onZoomTo,

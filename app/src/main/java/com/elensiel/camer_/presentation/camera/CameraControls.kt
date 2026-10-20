@@ -1,17 +1,23 @@
 package com.elensiel.camer_.presentation.camera
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.elensiel.camer_.R
 import com.elensiel.camer_.domain.model.CaptureAspectRatio
+import com.elensiel.camer_.domain.model.FlashMode
 import com.elensiel.camer_.presentation.components.ActionButton
 import com.elensiel.camer_.presentation.components.PillOption
 import com.elensiel.camer_.presentation.components.ZoomButtons
@@ -30,7 +36,7 @@ fun CameraControls(
     state: CameraUiState,
     onCaptureClick: () -> Unit,
     onFlipClick: () -> Unit,
-    onFlashClick: () -> Unit,
+    onFlashModeSelect: (FlashMode) -> Unit,
     onTorchClick: () -> Unit,
     onAspectRatioClick: (CaptureAspectRatio) -> Unit,
     onZoomPreset: (Float) -> Unit,
@@ -41,29 +47,16 @@ fun CameraControls(
     Box(modifier = modifier) {
 
         // -- Top-left: flash & torch (only if the device has a flash unit) --
-
         if (state.hasFlashUnit) {
-            Column(
+            FlashMenu(
                 modifier = Modifier
                     .align(Alignment.TopStart)
                     .padding(start = EdgePadding, top = EdgePadding),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                ActionButton(
-                    onClick = onFlashClick,
-                    icon = painterResource(state.flashMode.icon),
-                    contentDescription = "Flash",
-                )
-
-                ActionButton(
-                    onClick = onTorchClick,
-                    icon = painterResource(
-                        if (state.torchEnabled) R.drawable.flashlight_on
-                        else R.drawable.flashlight_off
-                    ),
-                    contentDescription = "Torch",
-                )
-            }
+                flashMode = state.flashMode,
+                torchEnabled = state.torchEnabled,
+                onFlashModeSelect = onFlashModeSelect,
+                onTorchClick = onTorchClick,
+            )
         }
 
         // -- top-center: live detection --
@@ -123,6 +116,62 @@ fun CameraControls(
 // ---------------------------------------------------------------
 // Sections
 // ---------------------------------------------------------------
+
+@Composable
+private fun FlashMenu(
+    modifier: Modifier = Modifier,
+    flashMode: FlashMode,
+    torchEnabled: Boolean,
+    onFlashModeSelect: (FlashMode) -> Unit,
+    onTorchClick: () -> Unit,
+) {
+    var expanded by remember { mutableStateOf(false) }
+
+    val verticalArrangement = Arrangement.spacedBy(12.dp)
+
+    Column(
+        modifier = modifier,
+        verticalArrangement = verticalArrangement,
+    ) {
+        ActionButton(
+            onClick = { expanded = !expanded },
+            icon = painterResource(
+                if (torchEnabled) R.drawable.flashlight_on
+                else flashMode.icon
+            ),
+            contentDescription = "Flash options"
+        )
+
+        AnimatedVisibility(visible = expanded) {
+            Column(
+                verticalArrangement = verticalArrangement
+            ) {
+                FlashMode.entries.forEach { mode ->
+                    ActionButton(
+                        onClick = {
+                            onFlashModeSelect(mode)
+                            expanded = false
+                        },
+                        icon = painterResource(mode.icon),
+                        contentDescription = "Flash ${mode.name.lowercase()}"
+                    )
+                }
+
+                ActionButton(
+                    onClick = {
+                        onTorchClick()
+                        expanded = false
+                    },
+                    icon = painterResource(
+                        if (torchEnabled) R.drawable.flashlight_on
+                        else R.drawable.flashlight_off
+                    ),
+                    contentDescription = "Torch"
+                )
+            }
+        }
+    }
+}
 
 @Composable
 private fun CaptureRow(
