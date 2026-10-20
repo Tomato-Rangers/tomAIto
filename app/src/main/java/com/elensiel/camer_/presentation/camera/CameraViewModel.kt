@@ -14,6 +14,7 @@ import com.elensiel.camer_.domain.model.BindConfig
 import com.elensiel.camer_.domain.model.CaptureAspectRatio
 import com.elensiel.camer_.domain.model.CaptureResult
 import com.elensiel.camer_.domain.model.CapturedPhoto
+import com.elensiel.camer_.domain.model.FlashMode
 import com.elensiel.camer_.domain.repository.CameraRepository
 import com.elensiel.camer_.domain.repository.LensRepository
 import com.elensiel.camer_.domain.repository.SettingsRepository
@@ -132,8 +133,9 @@ class CameraViewModel(
         viewModelScope.launch { settingsRepo.setAspectRatio(ratio) }
     }
 
-    fun onCycleFlash() {
-        viewModelScope.launch { settingsRepo.setFlashMode(uiState.value.flashMode.next()) }
+    fun onFlashMode(mode: FlashMode) {
+        cameraRepo.setFlashMode(mode)
+        viewModelScope.launch { settingsRepo.setFlashMode(mode) }
     }
 
     fun onToggleTorch() = cameraRepo.setTorch(!uiState.value.torchEnabled)
