@@ -1,11 +1,14 @@
 package com.elensiel.camer_.data.camera
 
+import android.util.Size
+import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.Preview
 import androidx.camera.core.UseCaseGroup
 import androidx.camera.core.ViewPort
 import androidx.camera.core.resolutionselector.AspectRatioStrategy
 import androidx.camera.core.resolutionselector.ResolutionSelector
+import androidx.camera.core.resolutionselector.ResolutionStrategy
 import com.elensiel.camer_.domain.model.CaptureAspectRatio
 import com.elensiel.camer_.domain.model.FlashMode
 import com.elensiel.camer_.domain.model.ImageFormat
@@ -16,8 +19,10 @@ internal class BuiltUseCases(
     val imageFormat: ImageFormat,
 )
 
-internal class CameraUseCaseBuilder(private val session: CameraSession) {
-
+internal class CameraUseCaseBuilder(
+    private val session: CameraSession,
+    private val analyzer: FrameAnalyzer,
+) {
     fun build(
         aspectRatio: CaptureAspectRatio,
         format: ImageFormat,
@@ -56,10 +61,33 @@ internal class CameraUseCaseBuilder(private val session: CameraSession) {
             .setScaleType(ViewPort.FILL_CENTER)
             .build()
 
+        val analysis = ImageAnalysis.Builder()
+            .setResolutionSelector(
+                ResolutionSelector.Builder()
+                    .setAspectRatioStrategy(
+                        AspectRatioStrategy(
+                            aspectRatio.toCameraXRatio(),
+                            AspectRatioStrategy.FALLBACK_RULE_AUTO,
+                        )
+                    )
+                    .setResolutionStrategy(
+                        ResolutionStrategy(
+                            Size(640, 480),
+                            ResolutionStrategy.FALLBACK_RULE_CLOSEST_LOWER_THEN_HIGHER,
+                        )
+                    )
+                    .build()
+            )
+            .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+            .setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_RGBA_8888)
+            .build()
+            .also { it.setAnalyzer(analyzer.executor, analyzer) }
+
         val group = UseCaseGroup.Builder()
             .setViewPort(viewPort)
             .addUseCase(preview)
             .addUseCase(capture)
+            .addUseCase(analysis)
             .build()
 
         return BuiltUseCases(group, capture, format)

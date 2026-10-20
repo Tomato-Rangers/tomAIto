@@ -41,6 +41,7 @@ private fun CameraUiDebug(initial: CameraUiState) {
             onZoomPreset = { state = state.copy(zoomRatio = it) },
             onGalleryClick = {},
             onSettingsClick = {},
+            onDetectionClick = { state = state.copy(detectionEnabled = !state.detectionEnabled)},
         )
     }
 }

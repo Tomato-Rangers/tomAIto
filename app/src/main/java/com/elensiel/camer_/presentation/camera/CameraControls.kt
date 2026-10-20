@@ -42,6 +42,7 @@ fun CameraControls(
     onZoomPreset: (Float) -> Unit,
     onGalleryClick: () -> Unit,
     onSettingsClick: () -> Unit,
+    onDetectionClick: () -> Unit,
 ) {
     Box(modifier = modifier) {
 
@@ -57,6 +58,18 @@ fun CameraControls(
                 onTorchClick = onTorchClick,
             )
         }
+
+        // -- top-center: live detection --
+        ActionButton(
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .padding(top = EdgePadding),
+            onClick = onDetectionClick,
+            icon =
+                if (state.detectionEnabled) painterResource(R.drawable.detection_and_zone)
+                else painterResource(R.drawable.detection_and_zone_off),
+            contentDescription = "Live detection",
+        )
 
         // -- Top-right: settings dropdown menu --
 
