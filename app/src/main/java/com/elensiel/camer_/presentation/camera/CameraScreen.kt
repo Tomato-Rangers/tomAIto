@@ -53,5 +53,7 @@ fun CameraScreen(
         },
         onSettingsClick = onOpenSettings,
         onDetectionClick = viewModel::onToggleDetection,
+        onConfidenceChange = viewModel::onConfidenceThresholdChange,
+        onConfidenceCommit = viewModel::onConfidenceThresholdCommit,
     )
 }

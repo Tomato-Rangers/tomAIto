@@ -23,6 +23,7 @@ import com.elensiel.camer_.domain.usecase.CapturePhotoUseCase
 import com.elensiel.camer_.domain.usecase.DiscardPhotoUseCase
 import com.elensiel.camer_.domain.usecase.ObserveBindConfigUseCase
 import com.elensiel.camer_.domain.usecase.SavePhotoUseCase
+import com.tomatorangers.detection.data.repository.DetectorRepository
 import com.tomatorangers.detection.domain.model.DetectionResult
 import com.tomatorangers.detection.domain.usecase.ObserveLiveDetectionUseCase
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -43,6 +44,7 @@ class CameraViewModel(
     private val cameraRepo: CameraRepository,
     private val settingsRepo: SettingsRepository,
     private val lensRepo: LensRepository,
+    private val detectorRepo: DetectorRepository,
     private val capturePhoto: CapturePhotoUseCase,
     private val savePhoto: SavePhotoUseCase,
     private val discardPhoto: DiscardPhotoUseCase,
@@ -70,6 +72,7 @@ class CameraViewModel(
             capturedPhotoFile = photo?.file,
             volumeKeyShutter = settings.volumeKeyShutter,
             detectionEnabled = settings.liveDetectionEnabled,
+            confidenceThreshold = settings.confidenceThreshold,
         )
     }.stateIn(
         viewModelScope,
@@ -127,6 +130,10 @@ class CameraViewModel(
         viewModelScope.launch {
             settingsRepo.settings.map { it.liveDetectionEnabled }.distinctUntilChanged()
                 .collect(cameraRepo::setAnalysisEnabled)
+        }
+        viewModelScope.launch {
+            settingsRepo.settings.map { it.confidenceThreshold }.distinctUntilChanged()
+                .collect(detectorRepo::setConfidenceThreshold)
         }
     }
 
@@ -193,6 +200,12 @@ class CameraViewModel(
         viewModelScope.launch { settingsRepo.setLiveDetectionEnabled(!uiState.value.detectionEnabled) }
     }
 
+    fun onConfidenceThresholdChange(value: Float) = detectorRepo.setConfidenceThreshold(value)
+
+    fun onConfidenceThresholdCommit(value: Float) {
+        viewModelScope.launch { settingsRepo.setConfidenceThreshold(value) }
+    }
+
     // ---------------------------------------------------------------
     // Factory
     // ---------------------------------------------------------------
@@ -208,6 +221,7 @@ class CameraViewModel(
                     c.cameraRepo,
                     c.settingsRepo,
                     c.lensRepo,
+                    c.detectionRepo,
                     c.capturePhoto,
                     c.savePhoto,
                     c.discardPhoto,

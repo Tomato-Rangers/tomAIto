@@ -31,7 +31,8 @@ class PostProcessor(
         letterBox: LetterBox,
         srcWidth: Float,
         srcHeight: Float,
-    ): List<Detection> = nms(decode(output, letterBox, srcWidth, srcHeight))
+        confidenceThreshold: Float,
+    ): List<Detection> = nms(decode(output, letterBox, srcWidth, srcHeight, confidenceThreshold))
 
     /**
      * Turns every candidate in [output] into a [Detection]. Keeps only the best
@@ -44,6 +45,7 @@ class PostProcessor(
         letterBox: LetterBox,
         srcWidth: Float,
         srcHeight: Float,
+        confidenceThreshold: Float,
     ): List<Detection> {
         val results = mutableListOf<Detection>()
 

@@ -30,7 +30,11 @@ class Detector(
      * buffer are reused between calls.
      */
     @Synchronized
-    fun detect(bitmap: Bitmap, rotationDegrees: Int): List<Detection> {
+    fun detect(
+        bitmap: Bitmap,
+        rotationDegrees: Int,
+        confidenceThreshold: Float,
+    ): List<Detection> {
         val pre = preprocessor.process(bitmap, rotationDegrees)
 
         output.rewind()
@@ -41,7 +45,13 @@ class Detector(
         val srcWidth = (if (swapped) bitmap.height else bitmap.width).toFloat()
         val srcHeight = (if (swapped) bitmap.width else bitmap.height).toFloat()
 
-        return postProcessor.process(output, pre.letterBox, srcWidth, srcHeight)
+        return postProcessor.process(
+            output,
+            pre.letterBox,
+            srcWidth,
+            srcHeight,
+            confidenceThreshold,
+        )
     }
 
     override fun close() = model.close()

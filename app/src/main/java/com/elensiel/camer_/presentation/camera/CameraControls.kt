@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -23,12 +24,10 @@ import com.elensiel.camer_.presentation.components.PillOption
 import com.elensiel.camer_.presentation.components.ZoomButtons
 import com.elensiel.camer_.presentation.components.glassPill
 import com.elensiel.camer_.presentation.components.icon
+import com.tomatorangers.detection.presentation.components.ConfidenceThresholdDialog
 
 private val EdgePadding = 24.dp
-
-// ---------------------------------------------------------------
-// Screen entry point
-// ---------------------------------------------------------------
+private val MenuArrangement = Arrangement.spacedBy(12.dp)
 
 @Composable
 fun CameraControls(
@@ -43,15 +42,58 @@ fun CameraControls(
     onGalleryClick: () -> Unit,
     onSettingsClick: () -> Unit,
     onDetectionClick: () -> Unit,
+    onConfidenceChange: (Float) -> Unit,
+    onConfidenceCommit: (Float) -> Unit,
 ) {
     Box(modifier = modifier) {
+        TopControls(
+            modifier = Modifier.align(Alignment.TopCenter),
+            state = state,
+            onFlashModeSelect = onFlashModeSelect,
+            onTorchClick = onTorchClick,
+            onDetectionClick = onDetectionClick,
+            onConfidenceChange = onConfidenceChange,
+            onConfidenceCommit = onConfidenceCommit,
+            onSettingsClick = onSettingsClick,
+        )
 
-        // -- Top-left: flash & torch (only if the device has a flash unit) --
+        BottomControls(
+            modifier = Modifier.align(Alignment.BottomCenter),
+            state = state,
+            onCaptureClick = onCaptureClick,
+            onFlipClick = onFlipClick,
+            onAspectRatioClick = onAspectRatioClick,
+            onZoomPreset = onZoomPreset,
+            onGalleryClick = onGalleryClick,
+        )
+    }
+}
+
+// ---------------------------------------------------------------
+// Groups
+// ---------------------------------------------------------------
+
+/** Top row: flash & torch (left), live detection (center), settings (right). */
+@Composable
+private fun TopControls(
+    modifier: Modifier = Modifier,
+    state: CameraUiState,
+    onFlashModeSelect: (FlashMode) -> Unit,
+    onTorchClick: () -> Unit,
+    onDetectionClick: () -> Unit,
+    onConfidenceChange: (Float) -> Unit,
+    onConfidenceCommit: (Float) -> Unit,
+    onSettingsClick: () -> Unit,
+) {
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(start = EdgePadding, end = EdgePadding, top = EdgePadding),
+    ) {
+        // Only if the device has a flash unit.
         if (state.hasFlashUnit) {
             FlashMenu(
-                modifier = Modifier
-                    .align(Alignment.TopStart)
-                    .padding(start = EdgePadding, top = EdgePadding),
+                modifier = Modifier.align(Alignment.TopStart),
                 flashMode = state.flashMode,
                 torchEnabled = state.torchEnabled,
                 onFlashModeSelect = onFlashModeSelect,
@@ -59,11 +101,8 @@ fun CameraControls(
             )
         }
 
-        // -- top-center: live detection --
         ActionButton(
-            modifier = Modifier
-                .align(Alignment.TopCenter)
-                .padding(top = EdgePadding),
+            modifier = Modifier.align(Alignment.TopCenter),
             onClick = onDetectionClick,
             icon =
                 if (state.detectionEnabled) painterResource(R.drawable.detection_and_zone)
@@ -71,51 +110,15 @@ fun CameraControls(
             contentDescription = "Live detection",
         )
 
-        // -- Top-right: settings dropdown menu --
-
-        ActionButton(
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .padding(top = EdgePadding, end = EdgePadding),
-            onClick = onSettingsClick,
-            icon = painterResource(R.drawable.settings),
-            contentDescription = "Settings",
+        SettingsMenu(
+            modifier = Modifier.align(Alignment.TopEnd),
+            confidenceThreshold = state.confidenceThreshold,
+            onConfidenceChange = onConfidenceChange,
+            onConfidenceCommit = onConfidenceCommit,
+            onMoreSettingsClick = onSettingsClick,
         )
-
-        // -- Bottom: zoom presets, capture row, aspect ratio selector --
-
-        Column(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(bottom = EdgePadding),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            ZoomButtons(
-                zoomRatio = state.zoomRatio,
-                minZoomRatio = state.minZoomRatio,
-                maxZoomRatio = state.maxZoomRatio,
-                onPreset = onZoomPreset,
-            )
-
-            CaptureRow(
-                onCaptureClick = onCaptureClick,
-                onGalleryClick = onGalleryClick,
-                onFlipClick = onFlipClick,
-            )
-
-            AspectRatioSelector(
-                selected = state.aspectRatio,
-                onSelect = onAspectRatioClick
-            )
-        }
     }
 }
-
-
-// ---------------------------------------------------------------
-// Sections
-// ---------------------------------------------------------------
 
 @Composable
 private fun FlashMenu(
@@ -127,11 +130,9 @@ private fun FlashMenu(
 ) {
     var expanded by remember { mutableStateOf(false) }
 
-    val verticalArrangement = Arrangement.spacedBy(12.dp)
-
     Column(
         modifier = modifier,
-        verticalArrangement = verticalArrangement,
+        verticalArrangement = MenuArrangement,
     ) {
         ActionButton(
             onClick = { expanded = !expanded },
@@ -144,7 +145,7 @@ private fun FlashMenu(
 
         AnimatedVisibility(visible = expanded) {
             Column(
-                verticalArrangement = verticalArrangement
+                verticalArrangement = MenuArrangement,
             ) {
                 FlashMode.entries.forEach { mode ->
                     ActionButton(
@@ -170,6 +171,95 @@ private fun FlashMenu(
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun SettingsMenu(
+    modifier: Modifier = Modifier,
+    confidenceThreshold: Float,
+    onConfidenceChange: (Float) -> Unit,
+    onConfidenceCommit: (Float) -> Unit,
+    onMoreSettingsClick: () -> Unit,
+) {
+    var expanded by remember { mutableStateOf(false) }
+    var showSlider by remember { mutableStateOf(false) }
+
+    Column(
+        modifier = modifier,
+        verticalArrangement = MenuArrangement,
+    ) {
+        ActionButton(
+            onClick = { expanded = !expanded },
+            icon = painterResource(R.drawable.settings),
+            contentDescription = "Flash options"
+        )
+
+        AnimatedVisibility(visible = expanded) {
+            Column(
+                verticalArrangement = MenuArrangement,
+            ) {
+                ActionButton(
+                    onClick = {
+                        expanded = false
+                        showSlider = true
+                    },
+                    icon = painterResource(R.drawable.tune),
+                    contentDescription = "Confidence threshold",
+                )
+
+                ActionButton(
+                    onClick = onMoreSettingsClick,
+                    icon = painterResource(R.drawable.more_horiz),
+                    contentDescription = "More settings",
+                )
+            }
+        }
+    }
+
+    if (showSlider) {
+        ConfidenceThresholdDialog(
+            initial = confidenceThreshold,
+            onChange = onConfidenceChange,
+            onCommit = onConfidenceCommit,
+            onDismiss = { showSlider = false },
+        )
+    }
+}
+
+/** Bottom stack: zoom presets, capture row, aspect ratio selector. */
+@Composable
+private fun BottomControls(
+    modifier: Modifier = Modifier,
+    state: CameraUiState,
+    onCaptureClick: () -> Unit,
+    onFlipClick: () -> Unit,
+    onAspectRatioClick: (CaptureAspectRatio) -> Unit,
+    onZoomPreset: (Float) -> Unit,
+    onGalleryClick: () -> Unit,
+) {
+    Column(
+        modifier = modifier.padding(bottom = EdgePadding),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        ZoomButtons(
+            zoomRatio = state.zoomRatio,
+            minZoomRatio = state.minZoomRatio,
+            maxZoomRatio = state.maxZoomRatio,
+            onPreset = onZoomPreset,
+        )
+
+        CaptureRow(
+            onCaptureClick = onCaptureClick,
+            onGalleryClick = onGalleryClick,
+            onFlipClick = onFlipClick,
+        )
+
+        AspectRatioSelector(
+            selected = state.aspectRatio,
+            onSelect = onAspectRatioClick,
+        )
     }
 }
 

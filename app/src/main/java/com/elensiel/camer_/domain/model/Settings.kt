@@ -10,4 +10,5 @@ data class Settings(
     val shutterSoundEnabled: Boolean = false,
     val shutterSoundLocked: Boolean = false,
     val volumeKeyShutter: VolumeKeyShutter = VolumeKeyShutter.OFF,
+    val confidenceThreshold: Float = 0.80f,
 )

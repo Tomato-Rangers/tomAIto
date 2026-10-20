@@ -3,6 +3,7 @@ package com.elensiel.camer_.data
 import android.content.Context
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.elensiel.camer_.domain.model.CaptureAspectRatio
@@ -26,6 +27,7 @@ class DataStoreSettingsRepository(private val context: Context) : SettingsReposi
     private val saveLocationKey = stringPreferencesKey("save_location")
     private val shutterSoundKey = booleanPreferencesKey("shutter_sound_enabled")
     private val volumeKeyShutterKey = stringPreferencesKey("volume_key_shutter_mode")
+    private val confidenceThresholdKey = floatPreferencesKey("confidence_threshold")
 
     override val settings: Flow<Settings> = context.dataStore.data.map { p ->
         Settings(
@@ -54,6 +56,8 @@ class DataStoreSettingsRepository(private val context: Context) : SettingsReposi
             volumeKeyShutter = p[volumeKeyShutterKey]
                 ?.let { runCatching { VolumeKeyShutter.valueOf(it) }.getOrNull() }
                 ?: VolumeKeyShutter.OFF,
+
+            confidenceThreshold = p[confidenceThresholdKey] ?: 0.80f,
         )
     }
 
@@ -88,5 +92,9 @@ class DataStoreSettingsRepository(private val context: Context) : SettingsReposi
 
     override suspend fun setVolumeKeyShutter(mode: VolumeKeyShutter) {
         context.dataStore.edit { it[volumeKeyShutterKey] = mode.name }
+    }
+
+    override suspend fun setConfidenceThreshold(value: Float) {
+        context.dataStore.edit { it[confidenceThresholdKey] = value }
     }
 }

@@ -10,8 +10,18 @@ import kotlinx.coroutines.withContext
 class DetectorRepository(
     private val detector: Lazy<Detector>,
 ) : DetectionRepository {
+    private var confidenceThreshold = 0.80f
+
+    override fun setConfidenceThreshold(value: Float) {
+        confidenceThreshold = value
+    }
+
     override suspend fun detect(bitmap: Bitmap, rotationDegrees: Int): List<Detection> =
         withContext(Dispatchers.Default) {
-            detector.value.detect(bitmap, rotationDegrees)
+            detector.value.detect(
+                bitmap,
+                rotationDegrees,
+                confidenceThreshold,
+            )
         }
 }

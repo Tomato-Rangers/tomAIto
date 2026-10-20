@@ -42,6 +42,8 @@ private fun CameraUiDebug(initial: CameraUiState) {
             onGalleryClick = {},
             onSettingsClick = {},
             onDetectionClick = { state = state.copy(detectionEnabled = !state.detectionEnabled)},
+            onConfidenceChange = {state = state.copy(confidenceThreshold = state.confidenceThreshold)},
+            onConfidenceCommit =  {state = state.copy(confidenceThreshold = state.confidenceThreshold)},
         )
     }
 }

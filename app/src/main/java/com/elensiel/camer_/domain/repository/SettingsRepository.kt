@@ -18,4 +18,5 @@ interface SettingsRepository {
     suspend fun setSaveLocation(location: String)
     suspend fun setShutterSoundEnabled(enabled: Boolean)
     suspend fun setVolumeKeyShutter(mode: VolumeKeyShutter)
+    suspend fun setConfidenceThreshold(value: Float)
 }
