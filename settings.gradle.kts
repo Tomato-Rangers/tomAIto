@@ -22,7 +22,7 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "camer-"
+rootProject.name = "tomAIto"
 include(":app")
 include(":permission")
 include(":detection")
