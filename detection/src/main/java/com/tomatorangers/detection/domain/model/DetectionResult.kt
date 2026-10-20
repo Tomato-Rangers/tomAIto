@@ -17,8 +17,8 @@ data class DetectionResult(
         detections = detections.map {
             it.copy(
                 box = it.box.copy(
-                    left = imageWidth - it.box.left,
-                    right = imageWidth - it.box.right,
+                    left = imageWidth - it.box.right,
+                    right = imageWidth - it.box.left,
                 )
             )
         }
