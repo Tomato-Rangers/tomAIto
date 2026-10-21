@@ -21,8 +21,8 @@ class LoadedModel(
 ) : Closeable {
     val nhwc = inputLayout == TensorLayout.NHCW
 
-    val inputWidth get() = if (nhwc) inputShape[1] else inputShape[2]
-    val inputHeight get() = if (nhwc) inputShape[2] else inputShape[3]
+    val inputHeight get() = if (nhwc) inputShape[1] else inputShape[2]
+    val inputWidth get() = if (nhwc) inputShape[2] else inputShape[3]
     val inputChannels get() = if (nhwc) inputShape[3] else inputShape[1]
 
     val numAttributes get() = if (outputChannelsFirst) outputShape[1] else outputShape[2]
