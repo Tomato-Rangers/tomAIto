@@ -11,6 +11,8 @@ import kotlinx.coroutines.withContext
 class DetectorRepository(
     private val detector: Lazy<Detector>,
 ) : DetectionRepository {
+
+    @Volatile
     private var confidenceThreshold = DetectionDefaults.CONFIDENCE_THRESHOLD
 
     override fun setConfidenceThreshold(value: Float) {
