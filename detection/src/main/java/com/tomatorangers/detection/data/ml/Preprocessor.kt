@@ -4,6 +4,7 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Matrix
+import android.graphics.Paint
 import androidx.core.graphics.createBitmap
 import org.tensorflow.lite.DataType
 import java.nio.ByteBuffer
@@ -58,7 +59,7 @@ class Preprocessor(private val model: LoadedModel) {
             postTranslate(width / 2f, height / 2f)
         }
         canvas.drawColor(Color.rgb(114, 114, 114))
-        canvas.drawBitmap(source, matrix, null)
+        canvas.drawBitmap(source, matrix, Paint(Paint.FILTER_BITMAP_FLAG))
 
         return LetterBox(
             scale = scale,

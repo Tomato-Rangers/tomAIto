@@ -16,7 +16,7 @@ class Detector(
 
 
     private val preprocessor = Preprocessor(model)
-    private val postProcessor = PostProcessor(model, labels, confidenceThreshold, iouThreshold)
+    private val postProcessor = PostProcessor(model, labels, iouThreshold)
     private val isFloat = model.outputType == DataType.FLOAT32
     private val output = ByteBuffer
         .allocateDirect(model.outputShape.fold(1, Int::times) * if (isFloat) 4 else 1)
