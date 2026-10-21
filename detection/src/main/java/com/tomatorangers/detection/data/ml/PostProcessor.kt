@@ -10,7 +10,6 @@ import kotlin.math.min
 class PostProcessor(
     private val model: LoadedModel,
     private val labels: List<String>,
-    private val confidenceThreshold: Float = 0.25f,
     private val iouThreshold: Float = .45f,
 ) {
 

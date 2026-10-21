@@ -3,6 +3,7 @@ package com.elensiel.camer_.presentation.camera
 import com.elensiel.camer_.domain.model.CaptureAspectRatio
 import com.elensiel.camer_.domain.model.FlashMode
 import com.elensiel.camer_.domain.model.VolumeKeyShutter
+import com.tomatorangers.detection.domain.model.DetectionDefaults
 import java.io.File
 
 data class CameraUiState(
@@ -16,5 +17,5 @@ data class CameraUiState(
     val maxZoomRatio: Float = 1f,
     val volumeKeyShutter: VolumeKeyShutter = VolumeKeyShutter.OFF,
     val detectionEnabled: Boolean = true,
-    val confidenceThreshold: Float = 0.80f,
+    val confidenceThreshold: Float = DetectionDefaults.CONFIDENCE_THRESHOLD,
 )

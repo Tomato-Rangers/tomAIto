@@ -11,7 +11,6 @@ import java.nio.ByteOrder
 class Detector(
     private val model: LoadedModel,
     private val labels: List<String>,
-    private val confidenceThreshold: Float = 0.50f,
     private val iouThreshold: Float = .45f,
 ) : Closeable {
 

@@ -12,6 +12,7 @@ import com.elensiel.camer_.domain.model.ImageFormat
 import com.elensiel.camer_.domain.model.Settings
 import com.elensiel.camer_.domain.model.VolumeKeyShutter
 import com.elensiel.camer_.domain.repository.SettingsRepository
+import com.tomatorangers.detection.domain.model.DetectionDefaults
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
@@ -57,7 +58,7 @@ class DataStoreSettingsRepository(private val context: Context) : SettingsReposi
                 ?.let { runCatching { VolumeKeyShutter.valueOf(it) }.getOrNull() }
                 ?: VolumeKeyShutter.OFF,
 
-            confidenceThreshold = p[confidenceThresholdKey] ?: 0.80f,
+            confidenceThreshold = p[confidenceThresholdKey] ?: DetectionDefaults.CONFIDENCE_THRESHOLD,
         )
     }
 
