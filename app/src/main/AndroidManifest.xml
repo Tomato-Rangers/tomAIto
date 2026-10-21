@@ -7,9 +7,10 @@
         android:required="true" />
 
     <uses-permission
-        android:name="android.permission.READ_EXTERNAL_STORAGE"
-        android:maxSdkVersion="32"
-        android:requiredFeature="true" />
+        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="28"
+        android:requiredFeature="true"
+        tools:ignore="ScopedStorage" />
 
     <uses-permission android:name="android.permission.CAMERA" />
 

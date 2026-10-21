@@ -1,4 +1,4 @@
-package com.elensiel.camer_.data
+package com.elensiel.camer_.data.media
 
 import android.content.ContentValues
 import android.content.Context
@@ -7,6 +7,7 @@ import android.graphics.BitmapFactory
 import android.graphics.ImageDecoder
 import android.graphics.Matrix
 import android.os.Build
+import android.os.Environment
 import android.provider.MediaStore
 import androidx.exifinterface.media.ExifInterface
 import com.elensiel.camer_.domain.model.ImageFormat
@@ -26,19 +27,21 @@ class MediaStoreRepository(
         format: ImageFormat,
         saveDirectory: String,
     ): String = withContext(Dispatchers.IO) {
+        val name = "${photoFile.nameWithoutExtension}.${format.fileExtension}"
+
         val values = ContentValues().apply {
-            put(
-                MediaStore.Images.Media.DISPLAY_NAME,
-                "${photoFile.nameWithoutExtension}.${format.fileExtension}",
-            )
-            put(
-                MediaStore.Images.Media.MIME_TYPE,
-                format.mimeType,
-            )
-            put(
-                MediaStore.Images.Media.RELATIVE_PATH,
-                saveDirectory,
-            )
+            put(MediaStore.Images.Media.DISPLAY_NAME, name)
+            put(MediaStore.Images.Media.MIME_TYPE, format.mimeType)
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                put(MediaStore.Images.Media.RELATIVE_PATH, saveDirectory)
+            } else {
+                val dir = File(Environment.getExternalStorageDirectory(), saveDirectory)
+                if (!dir.exists() && !dir.mkdirs()) {
+                    throw IOException("Failed to create directory ${dir.absolutePath}")
+                }
+                put(MediaStore.Images.Media.DATA, File(dir, name).absolutePath)
+            }
         }
 
         val resolver = context.contentResolver

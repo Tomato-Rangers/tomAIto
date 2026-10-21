@@ -1,6 +1,7 @@
 package com.elensiel.camer_
 
 import android.Manifest
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -45,13 +46,24 @@ class MainActivity : ComponentActivity() {
     }
 
     companion object {
-        private val permissions = listOf(
-            PermissionData(
-                Manifest.permission.CAMERA,
-                "Camera",
-                "Needed to take photos with the app.",
-            ),
-        )
+        private val permissions = buildList {
+            add(
+                PermissionData(
+                    Manifest.permission.CAMERA,
+                    "Camera",
+                    "Needed to take photos with the app.",
+                )
+            )
+            if (Build.VERSION.SDK_INT <= 28) {
+                add(
+                    PermissionData(
+                        Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                        "Write external storage",
+                        "Needed to save photos."
+                    )
+                )
+            }
+        }
     }
 }
 
