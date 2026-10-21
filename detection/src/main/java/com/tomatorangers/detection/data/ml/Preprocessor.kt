@@ -27,7 +27,9 @@ class Preprocessor(private val model: LoadedModel) {
     private val height = model.inputShape[if (channelsFirst) 2 else 1]
     private val width = model.inputShape[if (channelsFirst) 3 else 2]
     private val isFloat = model.inputType == DataType.FLOAT32
-
+    private val quantScale = model.inputQuantization?.scale ?: (1f / 255f)
+    private val quantZeroPoint = model.inputQuantization?.zeroPoint ?: 0
+    private val quantRange = if (model.inputType == DataType.UINT8) 0..255 else -128..127
     private val buffer = ByteBuffer
         .allocateDirect(width * height * 3 * if (isFloat) 4 else 1)
         .order(ByteOrder.nativeOrder())
@@ -69,11 +71,21 @@ class Preprocessor(private val model: LoadedModel) {
         val pixelCount = width * height
         for (i in 0 until pixelCount) {
             val pixel = pixels[i]
-            val rgb = intArrayOf((pixel shr 16) and 0xFF, (pixel shr 8) and 0xFF, pixel and 0xFF)
-            for (c in 0..2) {
-                // NCHW stores all R, then all G, then all B. NHWC stores R,G,B per pixel.
-                val index = if (channelsFirst) c * pixelCount + i else i * 3 + c
-                write(index, rgb[c])
+            val r = (pixel shr 16) and 0xFF
+            val g = (pixel shr 8) and 0xFF
+            val b = pixel and 0xFF
+
+            if (channelsFirst) {
+                // NCHW: all R, then all G, then all B.
+                write(i, r)
+                write(pixelCount + i, g)
+                write(2 * pixelCount + i, b)
+            } else {
+                // NHWC: R,G,B per pixel.
+                val base = i * 3
+                write(base, r)
+                write(base + 1, g)
+                write(base + 2, b)
             }
         }
         buffer.rewind()
@@ -83,11 +95,8 @@ class Preprocessor(private val model: LoadedModel) {
         if (isFloat) {
             buffer.putFloat(index * 4, value / 255f)
         } else {
-            val quant = model.inputQuantization
-            val scale = quant?.scale ?: (1f / 255f)
-            val zeroPoint = quant?.zeroPoint ?: 0
-            val range = if (model.inputType == DataType.UINT8) 0..255 else -128..127
-            val quantized = ((value / 255f / scale).roundToInt() + zeroPoint).coerceIn(range)
+            val quantized = ((value / 255f / quantScale).roundToInt() + quantZeroPoint)
+                .coerceIn(quantRange)
             buffer.put(index, quantized.toByte())
         }
     }
