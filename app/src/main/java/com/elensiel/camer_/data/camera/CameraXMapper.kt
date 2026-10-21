@@ -37,7 +37,7 @@ internal fun LensFacing.toCameraSelector() = CameraSelector.Builder()
 internal fun ImageFormat.toCameraX() = when (this) {
     ImageFormat.JPEG -> ImageCapture.OUTPUT_FORMAT_JPEG
 //    ImageFormat.RAW -> ImageCapture.OUTPUT_FORMAT_RAW
-    ImageFormat.ULTRA_HDR -> ImageCapture.OUTPUT_FORMAT_JPEG_ULTRA_HDR
+//    ImageFormat.ULTRA_HDR -> ImageCapture.OUTPUT_FORMAT_JPEG_ULTRA_HDR
 
     // every format that needs transcoding
     else -> ImageCapture.OUTPUT_FORMAT_JPEG
@@ -45,7 +45,7 @@ internal fun ImageFormat.toCameraX() = when (this) {
 
 internal fun Int.toImageFormat() = when (this) {
     ImageCapture.OUTPUT_FORMAT_JPEG -> ImageFormat.JPEG
-    ImageCapture.OUTPUT_FORMAT_JPEG_ULTRA_HDR -> ImageFormat.ULTRA_HDR
+//    ImageCapture.OUTPUT_FORMAT_JPEG_ULTRA_HDR -> ImageFormat.ULTRA_HDR
 //    ImageCapture.OUTPUT_FORMAT_RAW -> ImageFormat.RAW
     else -> null
 }
