@@ -1,4 +1,4 @@
-package com.elensiel.camer_.data
+package com.elensiel.camer_.data.media
 
 import java.io.File
 

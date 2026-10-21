@@ -3,7 +3,7 @@ package com.elensiel.camer_.di
 import android.content.Context
 import com.elensiel.camer_.data.DataStoreSettingsRepository
 import com.elensiel.camer_.data.LensCacheRepository
-import com.elensiel.camer_.data.MediaStoreRepository
+import com.elensiel.camer_.data.media.MediaStoreRepository
 import com.elensiel.camer_.data.camera.CameraXRepository
 import com.elensiel.camer_.domain.usecase.CapturePhotoUseCase
 import com.elensiel.camer_.domain.usecase.DiscardPhotoUseCase

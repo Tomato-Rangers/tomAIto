@@ -1,7 +1,7 @@
 package com.elensiel.camer_
 
 import android.app.Application
-import com.elensiel.camer_.data.purgeStaleCache
+import com.elensiel.camer_.data.media.purgeStaleCache
 import com.elensiel.camer_.di.AppContainer
 
 class CamApp : Application() {

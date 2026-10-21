@@ -1,6 +1,6 @@
 package com.elensiel.camer_
 
-import com.elensiel.camer_.data.purgeStaleCache
+import com.elensiel.camer_.data.media.purgeStaleCache
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Rule
